@@ -1,0 +1,3 @@
+Tex/Expose/*
+!Tex/Expose/*.pdf
+!Tex/Expose/*.tex

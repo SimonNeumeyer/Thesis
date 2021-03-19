@@ -1,0 +1,465 @@
+
+\documentclass[a4paper,13pt]{article}
+\usepackage{geometry}
+\geometry{ margin= 2cm}
+
+%\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{notes2bib}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs} % For formal tables
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{subfig}
+\usepackage{float}
+\usepackage{graphicx, float}
+\usepackage{caption,lipsum}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{fixltx2e}
+\usepackage{tabulary}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{ mathrsfs }
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{wasysym}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{minted}
+\usepackage{pdfpages}
+
+\usepackage{xcolor}
+\definecolor{LightGray}{gray}{0.9}
+%\usemintedstyle{borland}
+%New colors defined
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\PRA}{PRA}
+\DeclareMathOperator*{\degr}{deg}
+
+\newcommand\Tstrut{\rule{0pt}{3ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}} 
+
+\title{ Graph Embedding with Self-clustering}
+\author{Aufschläger Robert, Ding Yunchen, Graßl Isabella, Lin Zhihao, Neumeyer Simon}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Phase(1): Problem Definition}
+
+ \subsection*{Motivation}
+\subsubsection*{Author: Isabella Graßl}
+Today, graph representation learning is a relevant topic in the area of computer science as networks become larger with a tremendous increase in data points and billions of connections between them. Therefore, visualizing the data structure of such large-scale networks can be used to gain insights into the underlying semantics of the data and support for further research themes.
+
+In graph analytics, one key element is the question of \textit{how to represent a graph}. Graph embedding is a popular graph representation framework that aims to preserve the structure of the network, hence the nodes and their distances, and reduce their dimensionality to a low-dimensional space for being able to apply machine learning techniques. Furthermore, community detection and the preceding measure of proximity between certain nodes is a well-studied problem.
+
+This paper summarizes different approaches for a graph embedding that preserves not only the proximity of nearest neighbors in the graph, i.e. nodes that are reachable via one or two edges (referred to first-order and second-order proximity), but that tries to detect and embed communities, i.e. groups of densely connected nodes, as well. The approach of GEMSEC \cite{GEMSEC} will be implemented in the second phase of the project and eventually, the results will be evaluated and visualized.\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection*{GEMSEC: Graph Embedding with Self-clustering}
+\subsubsection*{Authors: Yunchen Ding, Isabella Graßl, Zhihao Lin}
+
+Rozemberczki et al. (2018) \cite{GEMSEC} introduced GEMSEC, an approach for community representation of large-scale networks. In their paper, they describe an algorithm that encodes nodes to vectors which helps to deal with the problem of community detection within large-scale networks. The challenge is to preserve the data structure of a network while embedding and clustering.
+
+Sequence-based methods have been used to embed the nodes with close social relationships. Usually, the neighborhood of the nodes is preserved, but their closeness as a community is not. Communities are nodes that share more edges, hence constitute a neighborhood, than others in a network. As most approaches do not retain the clear preferences of the social community, GEMSEC was proposed, which is based on the paradigm of sequence-based node embedding procedure and first and second-order random walk. 
+
+According to its loss function and adding the clustering cost, the output embedding of nodes stay around the origin and close to their neighborhoods, and nodes are forced to be close to their clustering center. Thus GEMSEC is a model that deals with node embedding and clustering at the same time.
+
+As for embedding input, let $G=(V,E)$ be a graph, where $V$ is the set of nodes and $E$ is the set of edges. Then its node embedding is $f:V\xrightarrow{}\mathbb{R}^d$, where $d$ is the dimension of the embedding space for each node. Thus $f$ is a $|V|\times d$ real-valued matrix. After the first and second-order random walk, sequences of nodes are sampled from the graph. Defines $N_S(v)$ is a collection of nodes contains $v$, which is extracted with the window $w$ from sequences. 
+The goal is to minimize the negative log-likelihood of observing neighborhood of source nodes conditional on feature vectors, formally:
+
+\begin{equation}
+\label{}
+\min_f \sum_{v \in V}-\log P(N_S(v)|f(v))
+\end{equation}
+With conditional independence, $P(N_S(v)|f(v))$ can be factorized as:
+\begin{equation}
+\label{}
+P(N_S(v)|f(v))=\prod_{n_i \in N_S(v)}P(n_i \in N_S(v)|f(v),f(n_i))
+\end{equation}
+To satisfy symmetry in the feature space, $P(n_i \in N_S(v)|f(v),f(n_i))$ can be designed as :
+\begin{equation}
+\label{}
+P(n_i \in N_S(v)|f(v),f(n_i)) = \frac{\exp(f(n_i)\cdot f(v))}{\sum_{u \in V}\exp(f(u)\cdot f(v))}
+\end{equation}
+
+The softmax function is used to map the probability that the nodes $n_i$ are in the collection of a window containing node $v$ in the sample sequence $S$ under the condition that nodes are in the whole node embedding region to the value between $0$ and $1$. The total probability of the output layer equals to 1 (satisfies the property of probability). Basically, we choose the node with the largest probability as our predicted target.
+
+The goal of the model is to minimize the loss function over the embedding $f$, that is, $min_{f,\mu}L$,	where
+\begin{equation}
+\label{function}
+L=\underbrace{\sum_{v \in V}\Bigg[ \ln \Bigg( \sum_{u \in V}\exp(f(v)\cdot f(u))\Bigg) - \sum_{n_i\in N_S(v)}f(n_i)\cdot f(v)\Bigg]}_\text{Embedding Cost} + \underbrace{\gamma \cdot \sum_{v\in V}\min_{c\in C}||f(v) - \mu_c||_2}_\text{Clustering Cost}
+\end{equation}
+The embedding cost is the combination result of (1)(2)(3); $f(v)$ and $f(u)$ are the projected embedding of the node $v$ and $u$ respectively. $\mu_c$ is the centre of the $c^{th}$ cluster. 
+
+In the embedding cost, minimizing the inner product of vectors but increasing the inner product of neighborhoods enforces nodes to be embedded around the origin in a low volume dimension space and to be close to their neighborhoods. The clustering cost enforces embedding to be close to their cluster center. To avoid the embedding vectors all locate on the cluster center or missing the inner feature differences among nodes in the same cluster, the clustering cost coefficient $\gamma$ needs to be tuned carefully.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7cm]{pictures/algorithm_1.PNG}
+\caption{The pseudo code shows the training procedure of GEMSEC. Source: \cite{GEMSEC}}
+\label{fig:gemsec}
+\end{figure}
+
+The output is a low-dimensional vector representation of the graph. They use the Skip Gram Model where one node $v$ of the set is taken as well as one-by-one its neighborhood node within a predefined window. Then the probability of the co-occurrence in the neighborhood is predicted. In the iterations, the embedding converges to neighbors and at the same time, clusters are separated. Updating the weights of the neural network along the gradient of the objective function such that the computed co-occurrence probabilities of the neighbors of a certain node $v^*$ get higher and the clustering cost gets lower, makes node $v^*$ embedded not only closer to the origin and its neighbors, but to the nearest center of the cluster. The gradient for cluster centers adapts the cluster centers to reduce the overall distance of each cluster center to all vectors assigned to the corresponding cluster. These two gradients of the loss function are vital to deal with the minimization problem. As shown in Figure \ref{fig:gemsec} of the GEMSEC  algorithm \cite{GEMSEC}, for each node, the following procedure is executed iteratively:
+\begin{enumerate}
+\item Increase variable t with 1, which denotes the time. At each point in time the learning algorithm gets one sample presented and in the end may update the weights of the model (line 6).
+\item According to $\gamma_0, t, w, l, N, |V|$, update the clustering weight coefficient $\gamma$ as
+\begin{equation*}
+\gamma = \gamma_0 \cdot (10^{\frac{-t\cdot \log_{10} \gamma_0}{w\cdot l \cdot |V| \cdot N}})
+\end{equation*} (line 7). 
+\item According to $\alpha_0 , \alpha_F , t, w, l, N, |V|$ update the adaptive learning rate $\alpha$ as: 
+\begin{equation*}
+\alpha=\alpha_0-(\alpha_0-\alpha_F)\cdot \frac{t}{w\cdot l \cdot |V| \cdot N}  
+\end{equation*} 
+It determines to which tempo the weights are updated -- when the learning rate is relatively low, the chance of finding local minima is high, but the computation might take very long (line 8).
+\item  Use a first or second-order random walk to sample a sequence with length $l$ to measure the proximity between the nodes and hence, explore the search space (line 9).
+\item Use Skip-grams with window $w$ to extract features from the sequence, thereby obtaining a set of context nodes and occurrence probabilities conditional on the current center node (line 10).
+\item According to the input features and hyper-parameters $\gamma$, current learning rate $\alpha$ and the number of noise samples $k$, compute the loss and update the weights of the model. For updating the weights, the optimizer Adaptive Moment Estimation (Adam) is used. The iterations end when the output convergences. 
+\end{enumerate}
+
+\subsubsection*{Second-order Random Walk}
+The approach of GEMSEC uses first and second-order random walk to represent the neighborhood, hence the similarity of nodes, as this is one of the key challenges in the graph representation. 
+Whilst the first-order random walk only considers the current node to be important for the next searching step (node-to-node transition probability), the second-order random walk considers also the previously visited node (edge-to-edge transition probability). The second-order random walk used in GEMSEC is proposed by Grover \& Leskovec (2016) \cite{NODE2VEC}, which combines Breadth-first Sampling (BFS) and Depth-first Sampling (DFS) to sample sequences with length $l$ from a graph. The strategy BFS samples only the direct neighbors of a given node whereas DFS samples sequentially the nodes from the given node.
+
+Let $c_i$ denote the $i_{th}$ node in the walk. Nodes $c_i$ are randomly selected according to the probability $P(c_i|c_{i-1})$. Let $x$ be the selected node, and $v$ is the node selected in the last step. $P(c_i|c_{i-1})$ is defined as follows:
+  \[
+    P(c_i=x|c_{i-1}=v)=\left\{
+                \begin{array}{ll}
+                  \frac{\pi_{vx}}{Z}\quad \text{if } (v,x)\in E\\
+                  0 \quad otherwise
+                \end{array}
+              \right.
+  \]
+where $\pi_{vx}$ is the unnormalized transition probability between $v$ and $x$, and $Z$ is the normalizing constant. Let $t$ denote the node selected before $v$, that is $c_{i-2}$. We set $\pi_{vx}=\alpha_{pq}(t,x)\cdot w_{vx}$, where $w_{vx}$ is the edge weight between node $v$ and node $x$, and
+  \[
+    \alpha_{pq}(t,x)=\left\{
+                \begin{array}{ll}
+                  \frac{1}{p}\quad \text{if } d_{tx}=0\\
+                  1\quad \text{if } d_{tx}=1\\
+                  \frac{1}{q}\quad \text{if } d_{tx}=2
+                \end{array}
+              \right.
+  \]
+where $d_{tx} \in \{0,1,2\}$ and denotes the shortest path between node $t$ and $x$. Intuitively, parameter $p$ decides how often the node selected before will be revisited and parameter $q$ controls the random walk to tend to be BFS or DFS (cf. Fig. \ref{fig:random_walk}).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7cm]{pictures/random_walk.png}
+\caption{Illustration of the random walk strategy in node2vec where $t$ denotes the previous node, and the walk evaluates its transition probability of $v$ and $x$ for the next step. In $p$ is the return parameter, $q$ represents the in-out parameter and $\alpha$ denotes the search bias. Source: \cite{NODE2VEC}}
+\label{fig:random_walk}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hspace{2cm}
+
+\subsection*{DANMF: Deep Autoencoder-like Nonnegative Matrix Factorization }
+\subsubsection*{Author: Robert Aufschläger}
+
+The idea in ``Deep autoencoder-like nonnegative matrix factorization for community detection" \cite{DANMF} is to improve the existing non-negative matrix factorization (NMF) approaches by combining them with multi-layer autoencoders. The autoencoders as a special type of neural network are a useful tool for data dimension reduction and feature representation learning. In particular, it is assumed that the existing approaches have to be extended to retrieve a greater range from low-to-high level hidden attributes of the communities in the learning process. In the following paragraph, we summarize how NMF is extended to DANMF and how the objective function of the approach in the paper is derived. 
+
+Let $G=(V,E)$ be a network with $n = |V|$ nodes and $m=|E|$ edges. The network $G$ is described by its adjacency matrix $A$, where $[A]_{i,j}$ characterizes the relationship between node $i$ and node $j$. For the sake of simplicity let $A$ with $[A]_{i,j} \in \{0,1\}, \ 1 \leq i,j \leq n$ describe an unweighted network. Let $G$ consists of $k \in \mathbb{N}$ communities: $C = \{C_1, ..., C_k\}$, where $C_i \neq \emptyset, \ i \in \{1,...,k\} \ \text{and} \ C_{i_1} \neq C_{i_2}, \ 1 \leq i_1 < i_2 \leq k$.
+The fundamental non-negative matrix community detection approach is modeled by the approximation
+\[A \approx UV, \]where $A \in \{0,1\}^n$ and $U \in \mathbb{R}_{\geq 0}^{n \times k}, \ V \in \mathbb{R}_{\geq 0}^{k \times n}$ are the non-negative factor matrices. The matrix $V$ is called the community membership matrix, i. e. each column of $V$ represents the association relationship of a node to different communities, and each column of the matrix $U$ denotes the description of a community. For $l \in \{1,...,k\}$ the product $[U]_{i,l}[V]_{l,j}$ is interpreted as the contribution of the $l$-th community to the edge $[A]_{i,j}$. The goal is that the sum of the contributions of the nodes $i,j$ to the same community over all the communities,
+\[[\hat{A}]_{i,j} = \sum_{l = 1}^n [U]_{i,l}[V]_{l,j}\] approximates $[A]_{i,j}$ as good as possible for all $i,j \in \{1,...,n\}$. We obtain the following optimization problem:
+
+\begin{equation}
+\label{eq:minUV}
+\min_{U,V}||A-UV||_F^2, \ \text{s.t.} \ U,V \geq 0, 
+\end{equation} where $||\cdot||_F$ denotes the Frobenius-Norm of a real-valued matrix. The main difference in the DANMF approach compared to NMF approaches is to use Deep Learning resp. Deep matrix factorization to extend a one-layer matrix factorization ($UV$) into multiple layers. In this sense, the idea is to factorize $U$ further to get additional abstraction levels in community detection. We derive the desired approximation \[A \approx U_1U_2 ... U_pV_p, 
+\] where $p > 1, \ V_p \in \mathbb{R}_{\geq 0}^{k \times n}, \ U_i \in \mathbb{R}_{\geq 0}^{r_{i-1} \times r_i} \ \text{for} \ 1 \leq i \leq p$ and $n = r_0 \geq r_1 \geq ... \geq r_{p-1} \geq r_p =k$ and the corresponding objective function 
+\begin{equation}
+\label{eq:L_D}
+\min_{U_i,V_p} \mathcal{L}_D = ||A-U_1U_2 ... U_pV_p||_F^2 \ \text{s.t.} \ U_i,V_p \geq 0, \ \text{for all } i = 1, 2, ..., p. 
+\end{equation} The equations (\ref{eq:minUV}) and (\ref{eq:L_D}) are based on reconstructing the original network. That fits the decoder element of an autoencoder, i. e. we try to reconstruct $A$ by $\hat{A} = UV$, where $\hat{A}$ is an approximation of the adjacency matrix $A$. The matrix $U$ maps the community space to the original network. On the other side, we want to project $A$ into the community membership space with $V=U^TA$. That fits the encoder element of an autoencoder. The goal of DANMF is to integrate decoder and autoencoder in an objective function, so they can guide each other during the learning process. Thus, we also have an objective function for the encoder component:
+\begin{equation}
+\label{eq:L_E}
+\min_{U_i,V_p} \mathcal{L}_E = ||V_p - U_p^T...U_2^TU_1^TA||_F^2 \ \text{s.t.} \ U_i,V_p \geq 0, \ \text{for all } i = 1, 2, ..., p. 
+\end{equation} Now, (\ref{eq:L_D}) and (\ref{eq:L_E}) can be combined in one objective function:
+\begin{equation}
+\label{eq:DANMF_objective_function}
+\min_{U_i,V_p} \mathcal{L} = \mathcal{L}_D + \mathcal{L}_E + \lambda\mathcal{L}_{reg} \ \text{s.t.} \ U_i,V_p \geq 0, \ \text{for all } i = 1, 2, ..., p. 
+\end{equation} The last term $\lambda\mathcal{L}_{reg}$ is a graph regularizer to respect the intrinsic geometric structure of node pairs. There are several opportunities to achieve regularization. This is not explained further. The autoencoder concept of DANMF is visualized in Figure \ref{fig:danmf}. The matrices $V_i, i = 1,...,p$ are considered as layers of abstraction in an increasing sense. For community detection, the determination of $V_p$ suffices.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=9cm]{pictures/danmf.jpg}
+\caption{The architecture of DANMF. Source: \cite[p.4]{DANMF}.}
+\label{fig:danmf}
+\end{figure} 
+
+Let us consider an example based on Figure \ref{fig:danmf}. If one wants to categorize nodes in a community network with the corresponding adjacency matrix $A \in \{0,1\}^{n \times n}, \ n >> 32$ into $k=8$ communities, one could choose two hidden layers with layer sizes $32$ and $8$ respectively and derives matrices $U_1 \in \mathbb{R}_{\geq 0}^{n \times 32}, \ V_1 \in \mathbb{R}_{\geq 0}^{32 \times n}, \ U_2 \in \mathbb{R}_{\geq 0}^{32 \times 8}$ and $V_2 \in \mathbb{R}_{\geq 0}^{8 \times n}$. By default in the pre-training process in DANMF the matrices $U_i, i = 1,2$ and $V_i, i = 1,2$ are initialized with entries drawn from a uniform distribution $U[0,1)$. After the optimization process, one can multiply a column $v$ of $A$ with the community detection matrix $V_2$, $V_2v$, to assign a community to the node represented by $v$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hspace{2cm}
+
+\subsection*{ComE: Community Embedding framework}
+\subsubsection*{Author: Simon Neumeyer}
+The community embedding framework ComE~\cite{ComE} has been presented by Cai et al. one and a half years before Rozemberczki et al. released their paper on GEMSEC~\cite{GEMSEC} and targets the same goal as the latter, namely preserving high-order proximity between network nodes when mapping these nodes into a low-dimensional feature space. Preserving high-order proximity is hereby equivalent to community awareness. In general, a community embedding is defined as a representation of a community in a low-dimensional space. Like in GEMSEC the approach of ComE is to minimize a unified objective function over node embedding variables as well as community specific variables, the former containing the feature vectors for each node and the structure of the latter being highly dependent on how the communities are modeled in each approach. While GEMSEC uses vectors to model center points of communities in the feature space and penalizing the distance of a feature vector to its nearest community center vector, ComE holds it to a Gaussian mixture model to model each embedding by a multivariate normal distribution in the feature space, therefore amongst others integrating the fact that a node can be part of multiple communities into their model.
+
+The unified objective function enables a feedback loop between node embedding and community detection respectively community embedding. While a node embedding process that tries to embed feature vectors inside their corresponding communities clearly benefits from knowledge of communities and memberships, vice versa, due to the recent development of machine learning, node embedding results can significantly support community detection and hence community embedding. Therefore regarding a unified objective function stands in contrast to any approach that first detects communities by running an algorithm on the adjacency matrix of the graph, e.g. spectral clustering, and then performing node embedding and community embedding, the results of which then don't affect community detection. Cai et al.~\cite{ComE} show for various tasks on various datasets that the unified objective function approach performs best.
+
+Following well-reknown sequence based concepts, e.g. Deepwalk or LINE~\cite{LINE}, to preserve first-order and second-order proximity and additionally including a term for community detection/embedding, ComE solves the following optimization problem:
+\begin{equation}
+\label{ComE_objective}
+\argmin_{\Phi,\Phi^\star,\Pi,\Psi,\Sigma}&\underbrace{\sum_{(v_i,v_j)\in E}-\log\sigma (\phi_i^T\phi_j)}_{=: O_1(\Phi)}\underbrace{-\alpha\sum_{v_i\in V} P(N_S(v_i)\mid\phi_i)}_{=: O_2(\Phi, \Phi^\star)}\underbrace{-\beta\sum_{i=1}^{|V|}K^{-1}\log\sum_{k=1}^{K}\pi_{ik}N(\phi_i|\psi_k,\Sigma_k)}_{:=O_3(\Phi,\Pi,\Psi,\Sigma)}
+\end{equation}
+Given $d\in \mathbb{N}$, the dimension of the embedding space; $G=(V,E)$, the network graph with edges $E$ and vertices $V$; $K$, the number of communities; $\alpha > 0$, a hyperparameter to weight the second-order proximity part of the objective function; $\beta > 0$, a hyperparameter to weight the high-order proximity part of the objective function; $m\in \mathbb{N}$, the number of randomly selected negative samples for each node in each iteration; the objective function is optimized with respect to the following parameters:
+\begin{align*}
+\Phi=&\{\phi_i\mid i=1,\dots,|V|\}\text{ where $\phi_i\in \mathbb{R}^d$ is the embedding vector for node i, $i=1,\dots,|V|$}.\\
+\Phi^\star=&\{\phi_i^\star\mid i=1,\dots,|V|\}\text{ where $\phi_i^\star\in \mathbb{R}^d$ is the context embedding vector for node i, $i=1,\dots,|V|$}.\\
+\Pi=&\{\pi_{ik}\mid i=1,\dots,|V|,k=1,\dots,K\}\text{ where $\pi_{ik}\in [0,1]$ is the modeled probability of node i}\\
+&\text{ belonging to community k, $i=1,\dots,|V|, k=1,\dots,K$}.\\
+\Psi=&\{\Psi_1,\dots,\Psi_K\}\text{ where $\Psi_k\in \mathbb{R}^d$ is the expectation value of community embedding k, $k=1,\dots,K$}.\\
+\Sigma=&\{\Sigma_1,\dots,\Sigma_K\}\text{ where $\Sigma_k\in \mathbb{R}^{d\times d}$ is the covariance matrix of community embedding k, $k=1,\dots,K$}.
+\end{align*}
+It should be mentioned that in (\ref{ComE_objective}) the side constraint $\Sigma_k\neq 0, k=1,\dots,K$, shall be met. Furthermore,\\
+$N(\phi_i|\psi_k,\Sigma_k)$ corresponds to the density function of the normal distribution defined by expectation $\psi_k$ and covariance matrix $\Sigma_k$ evaluated at point $\phi_i$. Also $P(N_S(v_i)\mid \phi_i)$ is a notation for the modelled likelihood of the neural network "observing the context $N_S(v_i)$ of node i" and can be implemented variably. In ComE, negative sampling is used, and $P(N_S(v_i)\mid \phi_i)$ is expressed as
+\begin{equation*}
+\sum_{j\in C_i}\log\sigma({\phi_j^\star}^T\phi_i)+\sum_{l=1}^m\log\sigma(-{\phi_{i_l}^\star}^T\phi_i)
+\end{equation*}
+where $C_i$ is the context of node i, determined by a number of random walks, and $i_1,\dots,i_m:\Omega\rightarrow \{1,\dots,|V|\}$ are random variables to select negative samples for the context of node i. In ComE the random variables are defined in a way, such that the higher a node's degree, the more likely this node is selected as negative sample for another node. Now by minimizing $O_1$ in (\ref{ComE_objective}) the scalar product of the feature vectors of neighboring nodes in the graph is being maximized, the same holds for context nodes when minimizing $O_2$, except that hereby additionally the scalar product of two randomly selected nodes, that in general are not contained in each other's context, is being minimized, hence nodes sharing a context tend to be projected near to each other in the feature space and further apart if not.
+
+ComE addresses optimization problem (\ref{ComE_objective}) by initializing $\Phi$, $\Phi^\star$ by Deepwalk and then for a number of iterations taking turns of first optimizing $O_3$ with respect to $\Pi,\Psi,\Sigma$ by a so called expectation maximization algorithm, an heuristic algorithm for maximizing a likelihood-function, that for a special case can be equivalent to K-Means, and then optimizing $O_1$, $O_2$ with respect to $\Psi,\Psi^\star$ by stochastic gradient descent.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\newpage
+%\section*{Phase(2): Implementation}
+\includepdf[pagecommand={\thispagestyle{plain}}, pages=1-4]{Phase2.pdf}
+
+\newpage
+\section*{Phase(3): Evaluations}
+After processing the data and training our machine learning model, we evaluate the created node embeddings in comparison to other approaches. Therefore, we conduct further learning tasks, operating on the feature vectors as input, and measure their efficiency. In this report, we use node classification, i.e. we measure how well a machine learning model can assign our feature vectors to pre-defined communities.
+%Therefore, different performance metrics are used which are evaluated on a test data set (Hold-Out Set), which was not used to train the model. This allows the performance for new data not seen by the model to be estimated \cite{clustering}.
+
+Classification models can be divided into different categories: binary, multi-class, multi-label and hierarchical classification. Most performance metrics for these categories can be derived from those of binary classification \cite{clustering}.
+
+\subsection*{(Hyper-)Parameter optimization}
+In machine learning tasks, hyperparameters must be chosen carefully as they have a significant impact on the model outcome. The following hyperparameters have been used for evaluation:
+
+\begin{itemize}
+\item \textbf{GEMSEC}\\ emb\_size $= 128$, window\_size $= 5$ , walk\_length $= 40$ , epochs $= 5$, batch\_size $= 256$, walks\_per\_node $= 5$
+\item \textbf{DeepWalk}\\
+ emb\_size $= 128$, window\_size $= 5$, walk\_length $= 40$, epochs $= 5$, walks\_per\_node $= 10$
+\item \textbf{ComE}\\
+ emb\_size $= 128$, window\_size $= 5$, walk\_length $= 40$,
+epochs $= 5$, batch\_size $= 50$, walks\_per\_node $= 5$
+\end{itemize}
+
+By using the ADAM optimizer \cite{ADAM}, we faced the issue of creating a new optimizer object for each batch which also implicates updating the certain learning rate. We solved this by only updating the optimizer's learning rate.
+% TODO EXPLAIN WHICH HYPERPARAMETERS ARE USED FOR EVALUATION. MAYBE WE CAN EXPERIMENT WITH CLUSTER WEIGHT COEFF. ONE TIME FROM 0.01 to 1, AND FROM 0.01 to 0.2. GROUP 2 had better results WITH THE LATTER. WE JUST HAVE TO REPLACE 5 by 25 in the DENOMINATOR (in the UPDATE of CLUSTER Weight)
+%EXPLAIN WHY WE USED THESE HYPERPARAMETERS. TALK ABOUT FINE TUNING AND THE IMPACT IN CASE OF CORA ..............
+
+Additionally, in GEMSEC there are two parameters, which are updated in every training step: learning rate and clustering weight coefficient. Figure \ref{fig:rates} shows the visualization of learning rate and clustering weight coefficient. While the learning rate is decreasing linearly, the clustering weight coefficient increases exponentially during the training. The goal of this parameter definition is that besides learning communities, a good clustering is generated as well.
+
+\begin{figure}[H]
+\centering
+    \subfloat[learning rate]{{\includegraphics[width=8cm]{cora_gemsec_alphas.png}}}%
+    \qquad
+    \subfloat[clustering cost coefficient]{{\includegraphics[width=8cm]{cora_gemsec_gammas.png}}}%
+    \caption{Plot of both learning rate alpha (a) and clustering cost coefficient gamma (b) over all epochs in GEMSEC, whereas gamma grows exponentially from $0.01$ to approx. $1$, alpha decreases linearly from $0.05$ to $0.001$.}%
+    \label{fig:rates}%
+  \end{figure}
+
+\subsubsection*{Training Loss}
+  
+Different from our expectation of an exponential drop of loss, as often seen in machine learning models, we obtained a rather concave drop of loss, see figure \ref{fig:loss}. 
+
+\begin{figure}[H]
+\centering
+    \subfloat[The training loss for GEMSEC on Cora]
+    {{\includegraphics[width=8cm]{cora_gemsec_losses.png}}}%
+    \qquad
+    \subfloat[The training loss for GEMSEC on Citeseer]
+    {{\includegraphics[width=8cm]{citeseer_gemsec_losses.png}}}%
+    \caption{Although the loss is decreasing during training, it is not as sharply decreasing as expected.}
+    \label{fig:loss}%
+  \end{figure}
+
+We tried several approaches to improve the loss curve. When reducing the total number of training data to $758272$ (by reducing window$\_$size, walk$\_$length and walks$\_$per$\_$node) and adding additional epochs we obtained the following composition for the loss (figure \ref{fig:losscomposition}). 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{cora_gemsec_losses_composition.png}
+    \caption{Training loss of GEMSEC using the Cora dataset. Hyperparameter setting: emb$\_$size $=128$, k$\_$com $=7$, epochs $=10$, batch$\_$size $=256$, neg$\_$samples $=10$, window$\_$size $=4$, walk$\_$length $=20$, alpha$\_$start $=0.05$, alpha$\_$final $=0.001$, clustering$\_$weight$\_$start $=0.01$, walks$\_$per$\_$node $=2$. The training loss (blue) is decomposed as sum of embedding cost (green) and clustering weight coefficient $\times$ clustering cost (red).}
+    \label{fig:losscomposition}
+\end{figure}
+
+We conjecture that this kind of loss behavior is caused by the clustering loss, and in particular, that in the inner epochs our model has difficulties to do both jobs, learning communities \textit{and} clustering. When we set the cluster weight coefficient to a constant gamma, for example, $\gamma=0.2$, we had more effective learning, but as the goal of the project was to implement GEMSEC in PyTorch in the way as it is described in the paper, we kept the exponentially increasing cluster weight coefficient.
+
+\subsection*{Node Classification}
+\subsubsection*{Accuracy-Score}
+Probably the simplest performance metric for classification is accuracy. This can be calculated with the formula
+\[
+    Accuracy = \frac{TP+TN}{(TP+FN)+(FP+TN)}
+\]
+where TP = True positive; FP = False positive; TN = True negative; FN = False negative. \\
+Accuracy indicates the proportion of correct predictions.
+Many other metrics can be derived from the elements of the Confusion Matrix. Widely used are, for example, Precision, Recall, and F1-Score.
+
+\subsubsection*{Precision and Recall}
+Precision (PR) is calculated as 
+\[
+    PR = \frac{TP}{TP+FP}
+\]
+and indicates the proportion of correctly predicted positive results (TP) relative to the total of all results predicted as positive. Informally, it indicates the percentage of positive class objects that we catch or detect with our model. 
+
+However, Recall (REC) indicates the percentage of results correctly classified as positive (TP) in relation to the total number of actual positive results:
+\[
+    REC = \frac{TP}{TP+FN}
+\]
+
+\subsubsection*{Macro F1-Score}
+F1 Score is an indicator used to measure the accuracy of a binary classification model in statistics. It takes into account both the accuracy and recall of the classification model.
+The F1-score is the harmonic mean of Precision and Recall and is often used as a summary metric:
+\[
+    F1 = 2\cdot \frac{PR\cdot REC}{PR + REC}.
+\]
+These metrics can also be used for multi-class problems. Starting point is again a Confusion Matrix with the elements $TP_i,FP_i,TN_i,FN_i$, where the index $i$ refers to a certain class. Afterwards, a large Confusion Matrix can be created from the partial results, i.e. one calculates e.g. the total of the True Positives. With these cumulative values, the Precision, Recall or F1 score can be calculated as usual. This procedure is called micro-averaging and weights strongly overrepresented classes significantly higher. In contrast, there is macro-averaging. Here, Precision, Recall and F1 score are calculated individually for each class and the results are only averaged afterward. Thus, all classes are weighted equally. Formally:
+\[
+    Macro-F1 = \frac{\sum_{1=1}^k F1_i}{k}
+\]
+
+Table \ref{tab:partial} shows the training percentage and the corresponding Macro-F1 score for each dataset and model. It shows that the score for GEMSEC is comparatively low. This might be due to our implementation as also the loss is not that sharply decreasing. On the other hand, the structure of the datasets as citation network might not be well suited for GEMSEC as there might not be highly coherent communities, as it is the case for social networks. While both GEMSEC and ComE perform best on the just mentioned graph structure, ComE might have fewer problems on different graph structures since ComE optimizes node embeddings regarding a node's membership to several communities, whereas in GEMSEC each node embedding gets optimized only with respect to a single community. On Cora, both DeepWalk and ComE are performing quite well with a score ranging from 76\% to 82\%. In contrast, on Citeseer, ComE outperforms the other models, but with the highest value \textit{only} around 55\%.
+%TODO explanation why its performance on this dataset is worse.
+
+\begin{table}[H]
+\caption{Node classification results for all three models on Cora and Citeseer, whereas the best score is marked as bold. In general, ComE performs well in comparison to GEMSEC and DeepWalk. }
+\footnotesize
+\begin{center}
+\begin{tabular}{cccc ccc ccc cc}
+\hline
+\textbf{Dataset}&
+\textbf{Model}&
+\multicolumn{5}{c}{\textbf{Macro-F1} }&
+\Tstrut\\
+\hline  
+\Tstrut
+  &  & &  $10\%$  &  $30\%$  & $50\%$ &  $70\%$  &$90\%$\Tstrut\\
+ \Tstrut
+ \multirow{4}{*}{Cora}& GEMSEC  &  & 0.589 & 0.581 & 0.582 & 0.616 & 0.599\Tstrut\\
+     & DeepWalk & & 0.757 & 0.793 & \textbf{0.817} & \textbf{0.838} & 0.813\\
+     & ComE & & \textbf{0.767} & \textbf{0.815} & 0.814 & 0.828 & \textbf{0.828}\\
+\hline
+ \Tstrut
+ \multirow{4}{*}{Citeseer}& GEMSEC &  & 0.436 & 0.447 & 0.453 & 0.452 & 0.483\Tstrut\\
+     & DeepWalk & & 0.435 & 0.491 & 0.519 & 0.538 & 0.537\\
+     & ComE & & \textbf{0.498} & \textbf{0.513} & \textbf{0.524} & \textbf{0.547} & \textbf{0.556}\\
+ \Tstrut
+\end{tabular}
+\end{center}
+\label{tab:partial}
+\end{table}
+
+% \subsection*{NMI}
+
+\subsection*{Visualization on Cora}
+T-distributed Stochastic Neighbor Embedding (t-SNE) is a nonlinear dimensionality reduction technique well-suited for visualizing high-dimensional data in a low-dimensional space. Specifically, it models each high-dimensional object by a two- or three-dimensional point in such a way that similar objects are modeled by nearby points and dissimilar objects are modeled by distant points with high probability. We utilize tSNE as a visualization method to gain insight into the structure of the obtained node embeddings. This is just for intuition as it does not represent the accuracy of our training.
+%WE HAVE TO ADD FIGURE 6 FROM THE PAPER FOR DANMF. AND WE HAVE TO ADD PLOTS FOR DEEPWALK, COME AND GEMSEC. I WOULD SUGGEST WE HAVE TWO PLOTS FOR GEMSEC. ONE TIME WITH CLUSTER WEIGHT UP TO 1 AND ONE TIME UP TO 0.2 LIKE GROUP 2. IT IS IMPORTANT THAT WE ADD HYPER PARAMETERS IN THE CORRESPONDING FIGURE DESCRIPTIONS !
+
+%TODO Interpretation and Comparison of the different approaches (cf. figure 2-5)!!!!!!!!!!
+
+We evaluated all models with the hyperparameter settings mentioned before. As shown in figure \ref{fig:coraVisualizationGemsec}, our model GEMSEC can separate the clusters very well. However, there are some outliers. As explained above, this does not represent the quality of our model as the Macro-F1 score of GEMSEC is not that good. This might be due to the outliers which get, due to the tight clustering of GEMSEC, pulled even further away from the place we want them to be.
+%replaced last sentence "this might be due to the false positives". Because: false positives here is the same as false negatives there, is the same as ... is the same as bad accuracy
+In contrast, the model of ComE (cf. Fig. \ref{fig:coraVisualizationComE}) is not able to separate the clusters as well as GEMSEC as there occurs too much noise. However, one can recognize patterns in the corners as there is a slight clustering.
+
+This is also the case for DeepWalk as seen in figure  \ref{fig:coraVisualizationDeep}. The clusters are not separated clearly because of noise in the center of the visualization. Although, there is a clustering identifiable. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{cora_gemsec_ground_truth_labels.png}
+    \caption{Visualization of representation learnt with GEMSEC on Cora}
+    \label{fig:coraVisualizationGemsec}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{cora_come_with_ground_truth_labels.png}
+    \caption{Visualization of representation learnt with ComE on Cora}
+    \label{fig:coraVisualizationComE}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{cora_deepwalk.png}
+    \caption{Visualization of representation learnt with DeepWalk on Cora}
+    \label{fig:coraVisualizationDeep}
+\end{figure}
+Because the computational time for DAMNF was too high, we present the visualization from Ye et al. (cf. Fig. \ref{fig:coraVisualizationDAMNF}). Before training the model, there is no clustering recognizable. With each layer the communities get better separated.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.55]{damnf.png}
+    \caption{Visualization of representation learnt with DAMNF on Cora \cite{DANMF}}
+    \label{fig:coraVisualizationDAMNF}
+\end{figure}
+
+\subsection*{Efficiency}
+In machine learning tasks, the efficiency of a model can be essential because of high computation and runtime costs. Therefore, table \ref{tab:runtime} shows the runtime for each iteration of our model GEMSEC, DeepWalk and ComE. As we implemented GEMSEC ourselves, it has by far the highest runtime. The other models are better optimized as they are well-established approaches.
+
+\begin{table}[H]
+\caption{Comparison of runtime per iteration (in seconds).}
+\footnotesize
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{Iteration} & \textbf{GEMSEC} & \textbf{DeepWalk} & \textbf{ComE} \\ 
+\hline
+1                  &596.1 &1.4& 45.2                 \\
+2                  &578.4&1.2& 43.5                 \\
+3                  &580.4&1.2& 41.2                \\
+4                  &575.2&1.1& 40.4             \\
+5                  &577.5&1.2& 41.6  
+                 
+\end{tabular}
+\end{center}
+\label{tab:runtime}
+\end{table}
+
+\subsection*{Conclusion}
+ Community detection is useful for better recognition of interrelationships between certain features and the underlying semantics of a complex graph. However, preserving the communities is difficult and we had several problems implementing a correctly working model.
+ 
+We learned how to implement different approaches in PyTorch and had to understand their underlying mathematics. We also realized that hyper-parameters can have a huge impact on the model and therefore hyperparameter tuning is a crucial and time-consuming task.
+
+Also, we are now aware of the fact that the visualization of learned representations might lead to a false interpretation of the results as it gives just intuition on the distribution of the node embeddings.
+For quantitative analysis, there are many other useful metrics, such as the Macro-F1 score in the case of node classification.
+
+\begin{thebibliography}{9}
+\bibitem{clustering}
+Aggarwal, Charu C., ed. Data clustering: algorithms and applications. CRC press, 2018, pp. 89-100.
+
+\bibitem{GEMSEC}Rozemberczki, Benedek, Ryan Davies, Rik Sarkar, and Charles Sutton. “Gemsec: Graph embedding with self clustering." arXiv preprint arXiv:1802.03997 (2018).
+
+\bibitem{ADAM}
+Kingma, Diederik P., and Jimmy Ba. “Adam: A method for stochastic optimization." arXiv preprint arXiv:1412.6980 (2014).
+
+\bibitem{ComE} Cavallari, Sandro, Vincent W. Zheng, Hongyun Cai, Kevin Chen-Chuan Chang, and Erik Cambria. "Learning community embedding with community detection and node embedding on graphs." In Proceedings of the 2017 ACM on Conference on Information and Knowledge Management, pp. 377-386. ACM, 2017.
+
+\bibitem{DANMF} Ye, Fanghua, Chuan Chen, and Zibin Zheng. “Deep autoencoder-like nonnegative matrix factorization for community detection." In Proceedings of the 27th ACM International Conference on Information and Knowledge Management, pp. 1393-1402. ACM, 2018.
+
+\bibitem{NODE2VEC} A. Grover and J. Leskovec, “Node2vec: Scalable feature learning for networks”, in Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016, pp. 855– 864.
+
+\bibitem{LINE} Jian Tang, Meng Qu, Mingzhe Wang, Ming Zhang, Jun Yan, Qiaozhu Mei. “LINE: Large-scale Information Network Embedding.” arXiv preprint arXiv:1503.03578 (2015).
+
+\end{thebibliography}
+
+%\bibliographystyle{IEEEtran}
+
+%\bibliography{svd-pairwise}
+
+
+\end{document}
