@@ -1,0 +1,13 @@
+(17.03.2021)
+Feedback Expose(1)
+-------------------
+- english
+- tex
+- Use chapters intro, related work, goal, methodology
+- rather don't incorporate graph embeddings
+- formulate more research questions (chapter goal/research questions)
+- analyse how many DAGs possible (how large is search space)
+  resp. how does it grow in O(n) depending on some parameter n
+- beware skip connections in DAGs
+- literature: hutter survey -> basics (maybe for chapter intro),
+  darts+, [3] [4] in mail (don't focus too much on them, just for analysing combinatorics)
