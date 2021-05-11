@@ -1,7 +1,7 @@
 Private/Public Key Pair created with Puttygen
 public key posted to github
 open: add key to ssh key agent
-(https://docs.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+https://docs.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
 
 question: do I already have a ssh key agent installed?
 does agent need to be running whenever I want to use ssh authorization?
