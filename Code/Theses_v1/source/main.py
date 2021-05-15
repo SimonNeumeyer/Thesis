@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parameter = {"reduction": util.Reduction.SUM, "alpha_update": True, "alpha_sampling": True}
     number_nodes = 3
     features_per_node = 10
-    graphs = graph.GraphManager(number_nodes).random(2)
+    graphs = graph.GraphGenerator(number_nodes)[2]
     diffNN = diffNN.DiffNN([diffNN.Graph_nn(graph, features_per_node) for graph in graphs])
     x = torch.ones(features_per_node)
     o = torch.ones(features_per_node)

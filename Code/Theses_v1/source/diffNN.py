@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import util
 from myLogging import alpha_gradient_logging
+from multiprocessing import reduction
+from collections import OrderedDict
 
 class DiffNN(nn.ModuleList):
     
@@ -56,11 +58,35 @@ class DiffNN(nn.ModuleList):
             return nn.functional.linear(alphas, torch.stack([module(x) for module in self], dim=1))
         
         
-class Graph_nn(nn.Module):
+class GraphNN(nn.Module):
     
     def __init__(self, graph, width):
-        super(Graph_nn, self).__init__()
-        self.model = nn.Linear(width, width)
+        super(GraphNN, self).__init__()
+        self.graph = graph
+        self.width = width
+        self.edgeNN = "EdgeNN"
+        self.initModel()
+        print("parameters:")
+        for p in self.named_parameters():
+            print(p)
+        
+    def initModel(self):
+        edgeNNs = []
+        for edge in self.graph.edges():
+            if self.graph.input_output_edge(*edge):
+                edgeNN = nn.Identity() 
+            else:
+                edgeNN = nn.Linear(self.width, self.width)
+            edgeNNs.append((str(edge), edgeNN))
+            self.graph.set_edge_attribute(*edge, self.edgeNN, edgeNN)
+        self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs))
+        
+    def reduce(self, tensors):
+        reduced = torch.sum(torch.stack(tensors), dim=0)
+        return reduced / torch.linalg.norm(reduced)
         
     def forward(self, x):
-        return self.model(x)
+        outputs = {self.graph.input_node : x}
+        for v in self.graph.ordered_nodes(except_input_node = True):
+            outputs[v] = self.reduce([self.graph.get_edge_attribute(p, v)[self.edgeNN](outputs[p]) for p in self.graph.get_predecessors(v)])
+        return outputs[self.graph.output_node]
