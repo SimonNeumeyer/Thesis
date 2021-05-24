@@ -1,5 +1,8 @@
 import numpy
+import networkx
 from networkx import DiGraph
+import matplotlib.pyplot as plt
+from numpy.random import default_rng
     
 class Graph():
     
@@ -35,6 +38,9 @@ class Graph():
     def input_output_edge(self, v_from, v_to):
         return v_from == self.input_node or v_to == self.output_node
     
+    def get_networkx(self):
+        return self.lib_graph
+    
     def edges(self):
         return self.lib_graph.edges
     
@@ -48,8 +54,10 @@ class GraphGenerator():
     
     def __init__(self, number_nodes):
         assert number_nodes > 1, "Number of nodes needs to be greater than 1"
+        self.rand = default_rng(0)
         self.number_nodes = number_nodes
         self.graphs = self.init_graphs()
+        self.clean_isomorphism()
         
     def init_graphs(self):
         graphs = [{}]
@@ -63,6 +71,14 @@ class GraphGenerator():
                     graphs.append(graph)
         return [self.contain_graph_from_technical(g) for g in graphs]
     
+    def clean_isomorphism(self):
+        cleaned = []
+        for g in self.graphs:
+            if not any([networkx.is_isomorphic(g.get_networkx(), h.get_networkx()) for h in cleaned]):
+                cleaned.append(g)
+        print(f"clean iso: before {len(self.graphs)}, after {len(cleaned)}")
+        self.graphs = cleaned
+    
     def contain_graph_from_technical(self, technical_graph):
         edges = []
         vertices = numpy.array(range(1, self.number_nodes + 1))
@@ -73,11 +89,17 @@ class GraphGenerator():
     def number_graphs(self):
         return len(self.graphs)
     
+    def get_random_subset(self, number_samples):
+        indices = self.rand.choice(self.number_graphs(), number_samples, replace=False)
+        return [self.get(index) for index in indices]
+    
     def get(self, index):
         return self.graphs[index]
+            
 
 if __name__ == "__main__":
-    number_nodes = 3
-    m = GraphGenerator(number_nodes)
-    for i in range(2 ** number_nodes):
-        print(m.get(i))
+#     number_nodes = 3
+#     m = GraphGenerator(number_nodes)
+#     for i in range(2 ** number_nodes):
+#         print(m.get(i))
+    pass
