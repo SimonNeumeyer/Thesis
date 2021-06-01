@@ -1,9 +1,8 @@
-import numpy
 import torch
 import torch.nn as nn
 from util import Constants
-from myLogging import alpha_gradient_logging
-from multiprocessing import reduction
+from graph import GraphGenerator
+#from myLogging import alpha_gradient_logging
 from collections import OrderedDict
 
 class DiffNN(nn.ModuleList):
@@ -12,7 +11,7 @@ class DiffNN(nn.ModuleList):
         super(DiffNN, self).__init__(modules)
         self.alphas = self.init_alphas(modules)
         self.set_alpha_update(False)
-        self.name = "test" #TODO
+        self.name = "OnlyDiffNN" #TODO
         self.optimization_settings = optimization_settings
         
     def get_name(self):
@@ -46,7 +45,7 @@ class DiffNN(nn.ModuleList):
         
     def calculate_alphas(self, alpha_sampling):
         """ alphas are either sampled or smooth """
-        alphas = nn.functional.softmax(self.alphas)
+        alphas = nn.functional.softmax(self.alphas, dim=0)
         if alpha_sampling:
             alphas = nn.functional.gumbel_softmax(self.alphas, hard=True, tau=1)
         return alphas
@@ -60,7 +59,6 @@ class DiffNN(nn.ModuleList):
         return self.alpha_update
         
     def reduce(self, alphas, tensors, reduce, normalize):
-        #print(torch.stack(tensors, dim=1).shape)
         if reduce == Constants.REDUCE_FUNC_SUM:
             #reduced = nn.functional.linear(alphas, torch.stack(tensors, dim=2))
             reduced = torch.matmul(alphas, torch.stack(tensors, dim=1))
@@ -82,23 +80,47 @@ class DiffNN(nn.ModuleList):
         
 class GraphNN(nn.Module):
     
-    def __init__(self, graph, width):
+    def __init__(self, graph, width=None, shared_edgeNNs=None):
         super(GraphNN, self).__init__()
         self.graph = graph
         self.width = width
         self.edgeNN = "EdgeNN"
-        self.initModel()
+        self.initModel(shared_edgeNNs)
         
-    def initModel(self):
-        edgeNNs = []
+    @classmethod
+    def generate_graphNNs_shared_weights(cls, graphs, width):
+        graphNNs = []
+        shared_edgeNNs = cls.generate_shared_weights(graphs[0], width)
+        for g in graphs:
+            graphNNs.append(GraphNN(g, shared_edgeNNs=shared_edgeNNs))
+        return graphNNs
+            
+    @classmethod
+    def generate_shared_weights(cls, graph, width):
+        graph = GraphGenerator.get_maximal_phenotype(graph.number_nodes_without_input_output())
+        return cls.create_edgeNNs(graph, width)
+    
+    @classmethod
+    def create_edgeNNs(cls, graph, width):
+        edgeNNs = {}
+        for edge in graph.edges():
+            if graph.input_output_edge(*edge):
+                edgeNN = nn.Identity() 
+            else:
+                edgeNN = nn.Sequential(nn.Linear(width, width), nn.ReLU())
+            edgeNNs[str(edge)] = edgeNN
+        return edgeNNs
+        
+    def initModel(self, edgeNNs):
+        if edgeNNs is None:
+            edgeNNs = self.create_edgeNNs(self.graph, self.width)
         for edge in self.graph.edges():
             if self.graph.input_output_edge(*edge):
                 edgeNN = nn.Identity() 
             else:
-                edgeNN = nn.Linear(self.width, self.width)
-            edgeNNs.append((str(edge), edgeNN))
-            self.graph.set_edge_attribute(*edge, self.edgeNN, edgeNN)
-        self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs))
+                edgeNN = edgeNNs[str(edge)]
+            self.graph.set_edge_attribute(*edge, self.edgeNN, edgeNN) # self.edgeNN is string constant
+        self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs)) # register model
         
     def reduce(self, tensors, reduce, normalize):
         if reduce == Constants.REDUCE_FUNC_SUM:

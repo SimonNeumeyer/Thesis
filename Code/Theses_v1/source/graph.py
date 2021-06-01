@@ -1,7 +1,6 @@
 import numpy
 import networkx
 from networkx import DiGraph
-import matplotlib.pyplot as plt
 from numpy.random import default_rng
     
 class Graph():
@@ -44,6 +43,9 @@ class Graph():
     def edges(self):
         return self.lib_graph.edges
     
+    def number_nodes_without_input_output(self):
+        return len(self.lib_graph.nodes) - 2
+    
     def ordered_nodes(self, except_input_node = True):
         if not except_input_node:
             return [self.input_node] + self.vertices_except_input_output + [self.output_node]
@@ -59,6 +61,21 @@ class GraphGenerator():
         self.graphs = self.init_graphs()
         self.clean_isomorphism()
         
+    @classmethod
+    def get_maximal_phenotype(cls, number_nodes):
+        graph = {}
+        for i in range(1, number_nodes):
+            graph[number_nodes - i] = [int(c) for c in f"{2**i-1:0{number_nodes}b}"]
+        return cls.contain_graph_from_technical(number_nodes, graph)
+    
+    @classmethod
+    def contain_graph_from_technical(cls, number_nodes, technical_graph):
+        edges = []
+        vertices = numpy.array(range(1, number_nodes + 1))
+        for v in technical_graph:
+            edges.extend([(v, s) for s in vertices[numpy.array(technical_graph[v], dtype=bool)]])
+        return Graph(vertices, edges)
+        
     def init_graphs(self):
         graphs = [{}]
         for i in range(1, self.number_nodes):
@@ -69,22 +86,16 @@ class GraphGenerator():
                     graph = one_node_smaller_graph.copy()
                     graph[self.number_nodes - i] = [int(c) for c in f"{j:0{self.number_nodes}b}"]
                     graphs.append(graph)
-        return [self.contain_graph_from_technical(g) for g in graphs]
+        return [self.contain_graph_from_technical(self.number_nodes, g) for g in graphs]
     
     def clean_isomorphism(self):
         cleaned = []
         for g in self.graphs:
             if not any([networkx.is_isomorphic(g.get_networkx(), h.get_networkx()) for h in cleaned]):
                 cleaned.append(g)
-        print(f"clean iso: before {len(self.graphs)}, after {len(cleaned)}")
+        #print(f"clean iso: before {len(self.graphs)}, after {len(cleaned)}")
         self.graphs = cleaned
-    
-    def contain_graph_from_technical(self, technical_graph):
-        edges = []
-        vertices = numpy.array(range(1, self.number_nodes + 1))
-        for v in technical_graph:
-            edges.extend([(v, s) for s in vertices[numpy.array(technical_graph[v], dtype=bool)]])
-        return Graph(vertices, edges)
+
     
     def number_graphs(self):
         return len(self.graphs)
@@ -95,11 +106,4 @@ class GraphGenerator():
     
     def get(self, index):
         return self.graphs[index]
-            
-
-if __name__ == "__main__":
-#     number_nodes = 3
-#     m = GraphGenerator(number_nodes)
-#     for i in range(2 ** number_nodes):
-#         print(m.get(i))
-    pass
+        

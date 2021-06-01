@@ -5,12 +5,10 @@ from myLogging import alpha_gradient_logging
 import diffNN
 import graph
 
-
-l = [torch.ones(5,2) for i in range(3)]
-print(torch.stack(l, dim=-1).shape)
-a = torch.ones(5,2,3)
-b = torch.ones(3)
-print(torch.matmul(a,b).shape)
+if False:
+    print(hash((2,3)))
+    print(hash((3,3)))
+    print(hash((2,3)))
 
 #a = torch.ones(5)
 # a = torch.tensor([-5,-1,2,3,4,5], dtype=torch.float32)
