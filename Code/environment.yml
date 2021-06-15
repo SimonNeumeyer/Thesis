@@ -3,3 +3,4 @@ dependencies:
   - Python
   - PyTorch
   - torchvision
+  - networkx

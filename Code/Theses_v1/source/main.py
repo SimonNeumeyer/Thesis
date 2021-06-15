@@ -39,7 +39,7 @@ class Trainer():
         return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-1, momentum=0.8))
     
     def run(self):
-        for i in range(5):
+        for i in range(10):
             print(f"epoch {i+1}")
             self.update_optimization_settings(alpha_update=False)
             for j in range(1):
