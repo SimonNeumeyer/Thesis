@@ -23,11 +23,11 @@ class Graph():
         self.lib_graph.add_edges_from([(v, self.output_node) for v in self.lib_graph.nodes() if not any(True for _ in self.lib_graph.successors(v))])
     
     def set_edge_attribute(self, v_from, v_to, key, value):
-        assert all([v in self.lib_graph.nodes for v in [v_from, v_to]]), "Edge to manipulate not contained in graph"
+        assert all([v in self.lib_graph.nodes for v in [v_from, v_to]]), "Edge to manipulate is not contained in graph"
         self.lib_graph[v_from][v_to][key] = value
         
     def get_edge_attribute(self, v_from, v_to):
-        assert all([v in self.lib_graph.nodes for v in [v_from, v_to]]), "Edge to manipulate not contained in graph"
+        assert all([v in self.lib_graph.nodes for v in [v_from, v_to]]), "Edge to manipulate is not contained in graph"
         return self.lib_graph[v_from][v_to]
     
     def get_predecessors(self, v_to):
