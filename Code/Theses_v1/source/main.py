@@ -2,6 +2,7 @@ from diffNN import *
 from visualization import *
 from util import *
 from data import *
+import sys
 import graph
 import torch
 import torch.nn as nn
@@ -38,8 +39,12 @@ class Trainer():
     def backward_stuff(self, model):
         return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-1, momentum=0.8))
     
-    def run(self):
-        for i in range(10):
+    def run(self, test):
+        if test:
+            epochs=1
+        else:
+            epochs=10
+        for i in range(epochs):
             print(f"epoch {i+1}")
             self.update_optimization_settings(alpha_update=False)
             for j in range(1):
@@ -113,5 +118,9 @@ class OptimizationSettings():
     
         
 if __name__ == "__main__":
+    test = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "test":
+            test = True
     trainer = Trainer()
-    trainer.run()
+    trainer.run(test=test)
