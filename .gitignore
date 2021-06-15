@@ -1,4 +1,7 @@
 Tex/Expose/*
 Tex/Orga/*
+Code/.metadata/
+Theses_v1/
+Code/Theses_v1/data/*
 !Tex/Expose/*.pdf
 !Tex/Expose/*.tex

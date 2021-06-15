@@ -4,3 +4,4 @@ dependencies:
   - PyTorch
   - torchvision
   - networkx
+  - matplotlib
