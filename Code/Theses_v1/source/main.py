@@ -12,6 +12,7 @@ class Trainer():
     
     def __init__(self, number_nodes=3, number_graphs=3, visualize=True):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(f"Cuda: {torch.cuda.is_available()}")
         self.initiate_data()
         self.visualization = Visualization(visualize)
         self.optimization_settings = OptimizationSettings()

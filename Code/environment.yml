@@ -1,4 +1,8 @@
 name: thesis
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
 dependencies:
   - Python
   - PyTorch
