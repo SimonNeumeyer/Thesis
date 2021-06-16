@@ -4,4 +4,3 @@ dependencies:
   - PyTorch
   - networkx
   - matplotlib
-  - tensorboardX
