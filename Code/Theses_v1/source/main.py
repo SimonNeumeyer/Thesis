@@ -10,8 +10,12 @@ from torch.optim import SGD
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=3, visualize=True):
+    def __init__(self, number_nodes=3, number_graphs=3, epochs=5, visualize=False, test=False):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.test = test
+        self.epochs = epochs
+        if self.test:
+            self.epochs = 1
         print(f"Cuda: {torch.cuda.is_available()}")
         self.initiate_data()
         self.visualization = Visualization(visualize)
@@ -40,12 +44,8 @@ class Trainer():
     def backward_stuff(self, model):
         return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-1, momentum=0.8))
     
-    def run(self, test):
-        if test:
-            epochs=1
-        else:
-            epochs=10
-        for i in range(epochs):
+    def run(self):
+        for i in range(self.epochs):
             print(f"epoch {i+1}")
             self.update_optimization_settings(alpha_update=False)
             for j in range(1):
@@ -119,9 +119,8 @@ class OptimizationSettings():
     
         
 if __name__ == "__main__":
-    test = False
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "test":
-            test = True
-    trainer = Trainer()
-    trainer.run(test=test)
+    args = {}
+    for arg in sys.argv:
+        args[arg] = True
+    trainer = Trainer(**args)
+    trainer.run()
