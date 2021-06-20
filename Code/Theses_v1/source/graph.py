@@ -1,6 +1,5 @@
 import numpy
-import networkx
-from networkx import DiGraph
+from networkx import is_isomorphic, DiGraph
 from numpy.random import default_rng
     
 class Graph():
@@ -91,7 +90,7 @@ class GraphGenerator():
     def clean_isomorphism(self):
         cleaned = []
         for g in self.graphs:
-            if not any([networkx.is_isomorphic(g.get_networkx(), h.get_networkx()) for h in cleaned]):
+            if not any([is_isomorphic(g.get_networkx(), h.get_networkx()) for h in cleaned]):
                 cleaned.append(g)
         #print(f"clean iso: before {len(self.graphs)}, after {len(cleaned)}")
         self.graphs = cleaned

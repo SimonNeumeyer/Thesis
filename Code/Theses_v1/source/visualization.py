@@ -3,7 +3,7 @@ import matplotlib.colors as colors
 from util import *
 import numpy
 from tensorboardX import SummaryWriter
-import networkx
+from networkx import draw_networkx
 
         
 def visualize_flag(func):
@@ -29,7 +29,7 @@ class Visualization:
         self.diffNN_registry.append(diffNN)
         
     def _visualize_graph(self, networkx_graph):
-        networkx.draw_networkx(networkx_graph)
+        draw_networkx(networkx_graph)
         return plt.gcf()
         
     @visualize_flag
