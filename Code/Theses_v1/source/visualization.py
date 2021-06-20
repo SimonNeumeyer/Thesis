@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from util import *
 import numpy
+import torch
 from tensorboardX import SummaryWriter
 from networkx import draw_networkx
 
@@ -9,8 +10,13 @@ from networkx import draw_networkx
 def visualize_flag(func):
     def wrapper_visualize_flag(self, *args, **kwargs):
         if self.visualize:
+            #args = [convert_tensor(arg) for arg in args if torch.is_tensor(arg)] + [arg for arg in args if not torch.is_tensor(arg)]
+            #kwargs = dict([(k,convert_tensor(v)) for (k,v) in kwargs.items() if torch.is_tensor(v)] + [(k,v) for (k,v) in kwargs.items() if not torch.is_tensor(v)])
             func(self, *args, **kwargs)
     return wrapper_visualize_flag
+
+def convert_tensor(tensor):
+    return tensor.cpu()
 
 
 class Visualization:
@@ -81,9 +87,11 @@ class Visualization:
         self.writer.close()
         
     def get_alpha_plot(self, alpha):
-        return self.get_matrix_plot(alpha.unsqueeze(0).numpy())
+        return self.get_matrix_plot(alpha.cpu().unsqueeze(0))
     
     def get_matrix_plot(self, matrix):
+        if matrix.device != 'cpu':
+            matrix = matrix.cpu()
         x = numpy.arange(-0.5, matrix.shape[1], 1)
         y = numpy.arange(-0.5, matrix.shape[0], 1)
         fig, ax = plt.subplots()
