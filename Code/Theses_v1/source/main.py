@@ -10,7 +10,7 @@ from torch.optim import SGD
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=3, epochs=20, visualize=False, test=False):
+    def __init__(self, number_nodes=3, number_graphs=3, epochs=3, visualize=False, test=False):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.test = test
         self.epochs = epochs
@@ -51,7 +51,7 @@ class Trainer():
             for j in range(1):
                 self.train_epoch()
                 self.evaluate()
-            self.update_optimization_settings(alpha_update=True)
+            self.update_optimization_settings(alpha_update=False)
             for j in range(1):
                 self.train_epoch()
                 self.evaluate()
