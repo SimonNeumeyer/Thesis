@@ -18,6 +18,10 @@ def visualize_flag(func):
 def convert_tensor(tensor):
     return tensor.cpu()
 
+def check_nan(array, func):
+    tmp = numpy.sum(array)
+    if numpy.isnan(tmp) or numpy.isinf(tmp):
+        logging.warning(f'My warning NaN or Inf found in input tensor {func}')
 
 class Visualization:
     
@@ -52,6 +56,7 @@ class Visualization:
         
         Collects loss information for learning rate visualization.
         """
+        check_nan(loss.cpu().numpy(), "batch")
         self.batch_count += 1
         self.running_loss = ((self.batch_count - 1) * self.running_loss + loss) / self.batch_count
                 
@@ -64,6 +69,7 @@ class Visualization:
         
         Visualizes losses and given alphas to TensorBoard.
         """
+        check_nan(evaluation_loss.cpu().numpy(), "epoch")
         self.epoch_count += 1
         self.batch_count = 0
         #Training loss
@@ -90,6 +96,7 @@ class Visualization:
         return self.get_matrix_plot(alpha.cpu().unsqueeze(0))
     
     def get_matrix_plot(self, matrix):
+        check_nan(matrix.cpu().numpy(), "matrix")
         if matrix.device != 'cpu':
             matrix = matrix.cpu()
         x = numpy.arange(-0.5, matrix.shape[1], 1)
