@@ -4,6 +4,7 @@ from util import Constants
 from graph import GraphGenerator
 #from myLogging import alpha_gradient_logging
 from collections import OrderedDict
+from main import OptimizationSettings #MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 
 class DiffNN(nn.ModuleList):
     
@@ -133,8 +134,11 @@ class GraphNN(nn.Module):
             return reduced
         
     def forward(self, x, optimization_settings):
+    #def forward(self, x):
+        #optimization_settings = OptimizationSettings()
         outputs = {self.graph.input_node : x}
         for v in self.graph.ordered_nodes(except_input_node = True):
             inputs = [self.graph.get_edge_attribute(p, v)[self.edgeNN](outputs[p]) for p in self.graph.get_predecessors(v)]
             outputs[v] = self.reduce(inputs, reduce=optimization_settings.graphNN_reduce, normalize=optimization_settings.graphNN_normalize)
+        #print([(i, torch.sum(v)) for (i,v) in outputs.items()])
         return outputs[self.graph.output_node]

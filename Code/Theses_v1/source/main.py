@@ -10,7 +10,7 @@ from torch.optim import SGD
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=3, epochs=3, visualize=False, test=False):
+    def __init__(self, number_nodes=3, number_graphs=1, epochs=3, visualize=False, test=False):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.test = test
         self.epochs = epochs
@@ -26,6 +26,7 @@ class Trainer():
         else:
             graphNNs = [GraphNN(graph, self.number_features) for graph in graphs]
         diffNN = DiffNN(graphNNs, self.optimization_settings)
+        #diffNN = graphNNs[0] #MMMMMMMMMMMMMMMMMMMMMMMMMMM
         self.visualization.plot_graphs([g.get_networkx() for g in graphs])
         self.visualization.register_diffNN(diffNN)
         self.model = nn.Sequential(diffNN, nn.Linear(self.number_features, self.number_classes), nn.Softmax(dim=-1))
@@ -58,14 +59,15 @@ class Trainer():
     
     def train_epoch(self):
         self.model.train()
+        counter = 0
         for i, o in self.loader_train:
+            counter += 1
             i, o = i.to(self.device), o.to(self.device)
             loss = self.loss(i, o)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             self.visualization.batch(copy_tensor(loss))
-        self.visualization.epoch(copy_tensor(self.evaluate()))
         for m in self.model:
             if isinstance(m, nn.Linear):
                 self.visualization.plot_weight_matrix(copy_tensor(m.weight), "Last linear")
@@ -80,6 +82,9 @@ class Trainer():
                 batch_count +=1
                 loss = ((batch_count - 1) * loss + self.loss(i, o)) / batch_count
         self.model.train()
+        self.visualization.epoch(copy_tensor(loss))
+        print("evaluate")
+        print(loss)
         return loss
     
     def update_optimization_settings(self, **kwargs):
@@ -91,6 +96,8 @@ class Trainer():
     def loss(self, i, o):
         if isinstance(self.loss_function, nn.CrossEntropyLoss):
             _, o = o.max(dim=-1) #get indices from one-hot encoding
+        #if counter % 100 == 0:
+            #print(self.model(i))
         return self.loss_function(self.model(i), o)
         
     def close(self):
@@ -108,7 +115,7 @@ class OptimizationSettings():
         self.alpha_sampling = False
         self.diffNN_reduce = Constants.REDUCE_FUNC_SUM
         self.graphNN_reduce = Constants.REDUCE_FUNC_SUM
-        self.graphNN_normalize = True
+        self.graphNN_normalize = False
         self.diffNN_normalize = False
         self.shared_weights = False
         
