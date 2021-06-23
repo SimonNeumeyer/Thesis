@@ -2,6 +2,8 @@ from diffNN import *
 from visualization import *
 from util import *
 from data import *
+import json
+import re
 import sys
 import graph
 import torch
@@ -15,7 +17,9 @@ class Trainer():
         self.epochs = epochs
         print(f"Cuda: {torch.cuda.is_available()}")
         self.initiate_data()
-        self.visualization = Visualization(visualize)
+        args = re.sub('[:\\s"\\{\\}]', '_', json.dumps({'number_nodes': number_nodes, 'number_graphs': number_graphs,
+                           'epochs': epochs, 'optimizer': optimizer}))
+        self.visualization = Visualization(args, visualize)
         self.optimization_settings = OptimizationSettings()
         graphs = graph.GraphGenerator(number_nodes).get_random_subset(number_graphs)
         if self.optimization_settings.shared_weights:
