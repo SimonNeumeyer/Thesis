@@ -10,7 +10,7 @@ from torch.optim import SGD
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=1, epochs=3, visualize=False, test=False):
+    def __init__(self, number_nodes=3, number_graphs=2, epochs=3, visualize=False, test=False):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.test = test
         self.epochs = epochs
@@ -26,7 +26,6 @@ class Trainer():
         else:
             graphNNs = [GraphNN(graph, self.number_features) for graph in graphs]
         diffNN = DiffNN(graphNNs, self.optimization_settings)
-        #diffNN = graphNNs[0] #MMMMMMMMMMMMMMMMMMMMMMMMMMM
         self.visualization.plot_graphs([g.get_networkx() for g in graphs])
         self.visualization.register_diffNN(diffNN)
         self.model = nn.Sequential(diffNN, nn.Linear(self.number_features, self.number_classes), nn.Softmax(dim=-1))
@@ -52,7 +51,7 @@ class Trainer():
             for j in range(1):
                 self.train_epoch()
                 self.evaluate()
-            self.update_optimization_settings(alpha_update=False)
+            self.update_optimization_settings(alpha_update=True)
             for j in range(1):
                 self.train_epoch()
                 self.evaluate()
@@ -83,8 +82,6 @@ class Trainer():
                 loss = ((batch_count - 1) * loss + self.loss(i, o)) / batch_count
         self.model.train()
         self.visualization.epoch(copy_tensor(loss))
-        print("evaluate")
-        print(loss)
         return loss
     
     def update_optimization_settings(self, **kwargs):
@@ -127,7 +124,8 @@ class OptimizationSettings():
         
 if __name__ == "__main__":
     args = {}
-    for arg in sys.argv[1:]:
+    args['epochs'] = int(sys.argv[1])
+    for arg in sys.argv[2:]:
         args[arg] = True
     trainer = Trainer(**args)
     trainer.run()
