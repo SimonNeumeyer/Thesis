@@ -6,16 +6,13 @@ import sys
 import graph
 import torch
 import torch.nn as nn
-from torch.optim import SGD
+from torch.optim import SGD, Adam
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=2, epochs=3, visualize=False, test=False):
+    def __init__(self, number_nodes=3, number_graphs=2, epochs=3, visualize=False, optimizer='adam'):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.test = test
         self.epochs = epochs
-        if self.test:
-            self.epochs = 1
         print(f"Cuda: {torch.cuda.is_available()}")
         self.initiate_data()
         self.visualization = Visualization(visualize)
@@ -31,7 +28,7 @@ class Trainer():
         self.model = nn.Sequential(diffNN, nn.Linear(self.number_features, self.number_classes), nn.Softmax(dim=-1))
         self.model.to(self.device)
         
-        self.loss_function, self.optimizer = self.backward_stuff(self.model)
+        self.loss_function, self.optimizer = self.backward_stuff(self.model, optimizer)
         
     def initiate_data(self):
         #dataset = MyDataset(overwrite=True)
@@ -41,8 +38,11 @@ class Trainer():
         self.number_features = dataset.number_features
         
         
-    def backward_stuff(self, model):
-        return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-1, momentum=0.8))
+    def backward_stuff(self, model, optimizer):
+        if optimizer == 'adam':
+            return (nn.CrossEntropyLoss(), Adam(model.parameters(), lr=1e-2))
+        else:
+            return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-2, momentum=0.8))
     
     def run(self):
         for i in range(self.epochs):
@@ -121,11 +121,19 @@ class OptimizationSettings():
             assert key in self.__dict__, f"Setting '{key}' not available"
             self.__dict__[key] = kwargs[key]
     
+def parse_args(list):
+    args = {}
+    for item in list:
+        if len(item.split("=")) > 1:
+            try:
+                args[item.split("=")[0]] = int(item.split("=")[1])
+            except:
+                args[item.split("=")[0]] = item.split("=")[1]
+        else:
+            args[item] = True
+    return args
         
 if __name__ == "__main__":
-    args = {}
-    args['epochs'] = int(sys.argv[1])
-    for arg in sys.argv[2:]:
-        args[arg] = True
+    args = parse_args(sys.argv[1:])
     trainer = Trainer(**args)
     trainer.run()
