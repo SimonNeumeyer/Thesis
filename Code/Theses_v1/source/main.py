@@ -19,7 +19,7 @@ class Trainer():
         print(f"Cuda: {torch.cuda.is_available()}")
         self.initiate_data()
         args = re.sub('[:\\s"\\{\\}]', '_', json.dumps({'number_nodes': number_nodes, 'number_graphs': number_graphs,
-                           'epochs': epochs, 'optimizer': optimizer}))
+            'epochs': epochs, 'optimizer': optimizer, 'number_features_graphNN': number_features_graphNN}))
         self.visualization = Visualization(args, visualize)
         self.optimization_settings = OptimizationSettings()
         graphs = graph.GraphGenerator(number_nodes).get_random_subset(number_graphs)
