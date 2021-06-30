@@ -36,7 +36,7 @@ class Trainer():
         self.model.add_module("LastLinear", nn.Linear(self.number_features_graphNN, self.number_classes))
         self.model.add_module("Softmax", nn.Softmax(dim=-1))
         self.model.to(self.device)
-        self.visualization.plot_model(self.model, self.dataset.get_sample()[0])
+        self.visualization.plot_model(self.model, self.dataset.get_sample()[0].to(self.device))
         self.loss_function, self.optimizer = self.backward_stuff(self.model, optimizer)
         
     def initiate_data(self):
@@ -131,13 +131,14 @@ class OptimizationSettings():
 def parse_args(list):
     args = {}
     for item in list:
-        if len(item.split("=")) > 1:
+        assert len(item.split("=")) == 2, f"args syntax unfamiliar: {item}"
+        try:
+            args[item.split("=")[0]] = int(item.split("=")[1])
+        except:
             try:
-                args[item.split("=")[0]] = int(item.split("=")[1])
+                args[item.split("=")[0]] = bool(item.split("=")[1])
             except:
                 args[item.split("=")[0]] = item.split("=")[1]
-        else:
-            args[item] = True
     return args
         
 if __name__ == "__main__":
