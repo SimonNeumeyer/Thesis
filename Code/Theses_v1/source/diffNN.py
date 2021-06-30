@@ -85,48 +85,38 @@ class GraphNN(nn.Module):
         super(GraphNN, self).__init__()
         self.graph = graph
         self.width = width
-        self.edgeNN = "EdgeNN"
-        self.initModel(shared_edgeNNs)
+        self.edgeNNs = shared_edgeNNs
+        self.initModel()
         
     @classmethod
     def generate_graphNNs_shared_weights(cls, graphs, width):
+        dense_graph = GraphGenerator.dense_graph(graphs[0].number_nodes_without_input_output())
+        dense_graphNN = GraphNN(graph=dense_graph, width=width)
         graphNNs = []
-        shared_edgeNNs = cls.generate_shared_weights(graphs[0], width)
         for g in graphs:
-            graphNNs.append(GraphNN(g, shared_edgeNNs=shared_edgeNNs))
+            graphNNs.append(GraphNN(g, shared_edgeNNs=dense_graphNN.get_edgeNNs()))
         return graphNNs
-            
-    @classmethod
-    def generate_shared_weights(cls, graph, width):
-        graph = GraphGenerator.get_maximal_phenotype(graph.number_nodes_without_input_output())
-        return cls.create_edgeNNs(graph, width)
-    
-    @classmethod
-    def create_edgeNNs(cls, graph, width):
-        edgeNNs = {}
-        for edge in graph.edges():
-            if graph.input_output_edge(*edge):
-                edgeNN = nn.Identity() 
-            else:
-                edgeNN = nn.Sequential(nn.Linear(width, width), nn.ReLU())
-            edgeNNs[cls.stringify_edge(edge)] = edgeNN
-        return edgeNNs
 
-    @classmethod
+    def get_edgeNNs (self):
+        return self.edgeNNs
+
+    def create_edgeNNs(self, graph, width):
+        self.edgeNNs = {}
+        for edge in graph.edges():
+            if not graph.input_output_edge(*edge):
+                self.edgeNNs[self.stringify_edge(edge)] = nn.Sequential(nn.Linear(width, width), nn.ReLU())
+
     def stringify_edge(self, edge):
         return f"edge_{edge[0]}_to_{edge[1]}"
         
-    def initModel(self, edgeNNs):
-        if edgeNNs is None:
-            edgeNNs = self.create_edgeNNs(self.graph, self.width)
+    def initModel(self):
+        if self.edgeNNs is None:
+            self.create_edgeNNs(self.graph, self.width)
         for edge in self.graph.edges():
-            if self.graph.input_output_edge(*edge):
-                edgeNN = nn.Identity() 
+            if not self.graph.input_output_edge(*edge):
+                setattr(self, self.stringify_edge(edge), self.edgeNNs[self.stringify_edge(edge)])
             else:
-                edgeNN = edgeNNs[self.stringify_edge(edge)]
-            self.graph.set_edge_attribute(*edge, self.edgeNN, edgeNN) # self.edgeNN is string constant
-            setattr(self, self.stringify_edge(edge), edgeNN)
-        #self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs)) # register model
+                setattr(self, self.stringify_edge(edge), nn.Identity())
         
     def reduce(self, tensors, reduce, normalize):
         if reduce == Constants.REDUCE_FUNC_SUM:
@@ -139,11 +129,8 @@ class GraphNN(nn.Module):
             return reduced
         
     def forward(self, x, optimization_settings):
-    #def forward(self, x):
-        #optimization_settings = OptimizationSettings()
         outputs = {self.graph.input_node : x}
         for v in self.graph.ordered_nodes(except_input_node = True):
-            inputs = [self.graph.get_edge_attribute(p, v)[self.edgeNN](outputs[p]) for p in self.graph.get_predecessors(v)]
+            inputs = [getattr(self, self.stringify_edge((p, v)))(outputs[p]) for p in self.graph.get_predecessors(v)]
             outputs[v] = self.reduce(inputs, reduce=optimization_settings.graphNN_reduce, normalize=optimization_settings.graphNN_normalize)
-        #print([(i, torch.sum(v)) for (i,v) in outputs.items()])
         return outputs[self.graph.output_node]

@@ -61,7 +61,7 @@ class GraphGenerator():
         self.clean_isomorphism()
         
     @classmethod
-    def get_maximal_phenotype(cls, number_nodes):
+    def dense_graph(cls, number_nodes):
         graph = {}
         for i in range(1, number_nodes):
             graph[number_nodes - i] = [int(c) for c in f"{2**i-1:0{number_nodes}b}"]
