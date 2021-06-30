@@ -101,7 +101,7 @@ class GraphNN(nn.Module):
         return self.edgeNNs
 
     def create_edgeNNs(self, graph, width):
-        self.edgeNNs = {}
+        self.edgeNNs = nn.ModuleDict()
         for edge in graph.edges():
             if not graph.input_output_edge(*edge):
                 self.edgeNNs[self.stringify_edge(edge)] = nn.Sequential(nn.Linear(width, width), nn.ReLU())
@@ -113,10 +113,8 @@ class GraphNN(nn.Module):
         if self.edgeNNs is None:
             self.create_edgeNNs(self.graph, self.width)
         for edge in self.graph.edges():
-            if not self.graph.input_output_edge(*edge):
-                setattr(self, self.stringify_edge(edge), self.edgeNNs[self.stringify_edge(edge)])
-            else:
-                setattr(self, self.stringify_edge(edge), nn.Identity())
+            if self.graph.input_output_edge(*edge):
+                self.edgeNNs[self.stringify_edge(edge)] = nn.Identity()
         
     def reduce(self, tensors, reduce, normalize):
         if reduce == Constants.REDUCE_FUNC_SUM:
@@ -131,6 +129,6 @@ class GraphNN(nn.Module):
     def forward(self, x, optimization_settings):
         outputs = {self.graph.input_node : x}
         for v in self.graph.ordered_nodes(except_input_node = True):
-            inputs = [getattr(self, self.stringify_edge((p, v)))(outputs[p]) for p in self.graph.get_predecessors(v)]
+            inputs = [self.edgeNNs[self.stringify_edge((p, v))](outputs[p]) for p in self.graph.get_predecessors(v)]
             outputs[v] = self.reduce(inputs, reduce=optimization_settings.graphNN_reduce, normalize=optimization_settings.graphNN_normalize)
         return outputs[self.graph.output_node]
