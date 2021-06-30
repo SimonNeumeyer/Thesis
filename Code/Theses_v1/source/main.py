@@ -36,7 +36,7 @@ class Trainer():
         self.model.add_module("LastLinear", nn.Linear(self.number_features_graphNN, self.number_classes))
         self.model.add_module("Softmax", nn.Softmax(dim=-1))
         self.model.to(self.device)
-        self.visualization.plot_model(self.model, self.dataset.get_sample()[0])
+        self.visualization.plot_model(self.model, self.dataset.get_sample()[0].to(self.device))
         self.loss_function, self.optimizer = self.backward_stuff(self.model, optimizer)
         
     def initiate_data(self):
