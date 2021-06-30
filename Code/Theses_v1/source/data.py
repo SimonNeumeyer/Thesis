@@ -64,6 +64,16 @@ class MyDataset(Dataset):
         """ not compatible with kaggle """
         (self.path / self.file_input).unlink()
         (self.path / self.file_output).unlink()
+
+    def get_sample(self):
+        loader_sample = DataLoader(
+            torch.utils.data.Subset(self, [0]),
+            batch_size = 1,
+            num_workers = 0,
+            shuffle=False
+        )
+        for i, o in loader_sample:
+            return (i, o)
         
     def get_train_test_loader(self):
         self.number_classes = 2
@@ -93,33 +103,46 @@ class MyMNIST():
         self.number_features = 28 * 28
         self.batch_size = 64
         self.num_workers = 4
+        self.dataset_train = torchvision.datasets.MNIST(
+            self.path,
+            train=True,
+            download=True,
+            transform=torchvision.transforms.Compose([
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+                MyTransformFromImage()]),
+            target_transform=MyTargetTransform()
+        )
+        self.dataset_test = torchvision.datasets.MNIST(
+            self.path,
+            train=False,
+            download=True,
+            transform=torchvision.transforms.Compose([
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+                MyTransformFromImage()]),
+            target_transform=MyTargetTransform()
+        )
+
+    def get_sample(self):
+        loader_sample = DataLoader(
+            torch.utils.data.Subset(self.dataset_test, [0]),
+            batch_size = 1,
+            num_workers = 0,
+            shuffle=False
+        )
+        for i, o in loader_sample:
+            return (i, o)
         
     def get_train_test_loader(self):
         loader_train = DataLoader(
-            torchvision.datasets.MNIST(
-                self.path,
-                train=True,
-                download=True,
-                transform=torchvision.transforms.Compose([
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-                    MyTransformFromImage()]),
-                target_transform=MyTargetTransform()),
+            self.dataset_train,
             batch_size = self.batch_size,
             num_workers = self.num_workers,
             shuffle=True
         )
-
         loader_test = DataLoader(
-            torchvision.datasets.MNIST(
-                self.path,
-                train=False,
-                download=True,
-                transform=torchvision.transforms.Compose([
-                    torchvision.transforms.ToTensor(),
-                    torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-                    MyTransformFromImage()]),
-                target_transform=MyTargetTransform()),
+            self.dataset_test,
             batch_size = self.batch_size,
             num_workers = self.num_workers,
             shuffle=True

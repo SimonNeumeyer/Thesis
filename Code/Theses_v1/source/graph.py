@@ -105,4 +105,3 @@ class GraphGenerator():
     
     def get(self, index):
         return self.graphs[index]
-        

@@ -109,8 +109,12 @@ class GraphNN(nn.Module):
                 edgeNN = nn.Identity() 
             else:
                 edgeNN = nn.Sequential(nn.Linear(width, width), nn.ReLU())
-            edgeNNs[str(edge)] = edgeNN
+            edgeNNs[cls.stringify_edge(edge)] = edgeNN
         return edgeNNs
+
+    @classmethod
+    def stringify_edge(self, edge):
+        return f"edge_{edge[0]}_to_{edge[1]}"
         
     def initModel(self, edgeNNs):
         if edgeNNs is None:
@@ -119,9 +123,10 @@ class GraphNN(nn.Module):
             if self.graph.input_output_edge(*edge):
                 edgeNN = nn.Identity() 
             else:
-                edgeNN = edgeNNs[str(edge)]
+                edgeNN = edgeNNs[self.stringify_edge(edge)]
             self.graph.set_edge_attribute(*edge, self.edgeNN, edgeNN) # self.edgeNN is string constant
-        self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs)) # register model
+            setattr(self, self.stringify_edge(edge), edgeNN)
+        #self.edgeNNs = nn.Sequential(OrderedDict(edgeNNs)) # register model
         
     def reduce(self, tensors, reduce, normalize):
         if reduce == Constants.REDUCE_FUNC_SUM:

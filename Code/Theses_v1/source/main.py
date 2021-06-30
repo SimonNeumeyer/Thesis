@@ -12,7 +12,7 @@ from torch.optim import SGD, Adam
 
 class Trainer():
     
-    def __init__(self, number_nodes=3, number_graphs=2, number_features_graphNN=64, epochs=3, visualize=False, optimizer='adam'):
+    def __init__(self, number_nodes=3, number_graphs=2, number_features_graphNN=59, epochs=3, visualize=False, optimizer='adam'):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.epochs = epochs
         self.number_features_graphNN = number_features_graphNN
@@ -30,22 +30,21 @@ class Trainer():
         diffNN = DiffNN(graphNNs, self.optimization_settings)
         self.visualization.plot_graphs([g.get_networkx() for g in graphs])
         self.visualization.register_diffNN(diffNN)
-        #self.model = nn.Sequential(diffNN, nn.Linear(self.number_features_graphNN, self.number_classes), nn.Softmax(dim=-1))
         self.model = nn.Sequential()
         self.model.add_module("FirstLinear", nn.Linear(self.number_features_in, self.number_features_graphNN))
         self.model.add_module("DiffNN", diffNN)
         self.model.add_module("LastLinear", nn.Linear(self.number_features_graphNN, self.number_classes))
         self.model.add_module("Softmax", nn.Softmax(dim=-1))
         self.model.to(self.device)
-        
+        self.visualization.plot_model(self.model, self.dataset.get_sample()[0])
         self.loss_function, self.optimizer = self.backward_stuff(self.model, optimizer)
         
     def initiate_data(self):
         #dataset = MyDataset(overwrite=True)
-        dataset = MyMNIST()
-        self.loader_train, self.loader_test = dataset.get_train_test_loader()
-        self.number_classes = dataset.number_classes
-        self.number_features_in = dataset.number_features
+        self.dataset = MyMNIST()
+        self.loader_train, self.loader_test = self.dataset.get_train_test_loader()
+        self.number_classes = self.dataset.number_classes
+        self.number_features_in = self.dataset.number_features
         
         
     def backward_stuff(self, model, optimizer):

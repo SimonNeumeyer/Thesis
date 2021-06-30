@@ -37,6 +37,9 @@ class Visualization:
     def _visualize_graph(self, networkx_graph):
         draw_networkx(networkx_graph)
         return plt.gcf()
+
+    def plot_model(self, model, input=None):
+        self.writer.add_graph(model, input)
         
     @visualize_flag
     def plot_graphs(self, graphs):
