@@ -90,6 +90,7 @@ class GraphNN(nn.Module):
         
     @classmethod
     def generate_graphNNs_shared_weights(cls, graphs, width):
+        assert False, "method call for shared weights not expected"
         dense_graph = GraphGenerator.dense_graph(graphs[0].number_nodes_without_input_output())
         dense_graphNN = GraphNN(graph=dense_graph, width=width)
         graphNNs = []
