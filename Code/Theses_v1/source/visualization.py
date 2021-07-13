@@ -26,6 +26,7 @@ class Visualization:
         self.writer = SummaryWriter(path_tensorboard(args))
         self.title_training_loss = "Training loss"
         self.title_evaluation_loss = "Evaluation loss"
+        self.title_accuracy = "Accuracy"
         self.diffNN_registry = []
         self.batch_count = 0
         self.epoch_count = 0
@@ -59,7 +60,7 @@ class Visualization:
         self.running_loss = ((self.batch_count - 1) * self.running_loss + loss) / self.batch_count
                 
     @visualize_flag
-    def epoch(self, evaluation_loss):
+    def epoch(self, evaluation_loss, accuracy):
         """ 
         Args:
             alphas: dictionary with 'title' - 'weights' as key - value structure
@@ -77,6 +78,10 @@ class Visualization:
         #Evaluation loss
         self.writer.add_scalar(tag=self.title_evaluation_loss, 
                                scalar_value=evaluation_loss, 
+                               global_step=self.epoch_count)
+        #Accuracy
+        self.writer.add_scalar(tag=self.title_accuracy,
+                               scalar_value=accuracy,
                                global_step=self.epoch_count)
         #alphas
         for diffNN in self.diffNN_registry:

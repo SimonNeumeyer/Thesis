@@ -39,8 +39,8 @@ class Trainer():
         self.loss_function, self.optimizer = self.backward_stuff(self.model, optimizer)
         
     def initiate_data(self):
-        self.dataset = MyDataset(overwrite=False)
-        #self.dataset = MyMNIST()
+        #self.dataset = MyDataset(overwrite=False)
+        self.dataset = MyMNIST()
         self.loader_train, self.loader_test = self.dataset.get_train_test_loader()
         self.number_classes = self.dataset.number_classes
         self.number_features_in = self.dataset.number_features
@@ -54,6 +54,7 @@ class Trainer():
     
     def run(self):
         for i in range(self.epochs):
+            self.evaluate()
             print(f"epoch {i+1}")
             self.update_optimization_settings(alpha_update=False)
             for j in range(1):
@@ -81,13 +82,15 @@ class Trainer():
         self.model.eval()
         with torch.no_grad():
             loss = 0
+            accuracy = 0
             batch_count = 0
             for i, o in self.loader_test:
                 i, o = i.to(self.device), o.to(self.device)
                 batch_count +=1
                 loss = ((batch_count - 1) * loss + self.loss(i, o)) / batch_count
+                accuracy = ((batch_count - 1) * accuracy + self.accuracy(i, o)) / batch_count
         self.model.train()
-        self.visualization.epoch(copy_tensor(loss))
+        self.visualization.epoch(evaluation_loss=copy_tensor(loss), accuracy=copy_tensor(accuracy))
         return loss
     
     def update_optimization_settings(self, **kwargs):
@@ -99,9 +102,10 @@ class Trainer():
     def loss(self, i, o):
         if isinstance(self.loss_function, nn.CrossEntropyLoss):
             _, o = o.max(dim=-1) #get indices from one-hot encoding
-        #if counter % 100 == 0:
-            #print(self.model(i))
         return self.loss_function(self.model(i), o)
+
+    def accuracy (self, i, o):
+        return torch.true_divide((self.model(i).max(dim=-1)[1] == o.max(dim=-1)[1]).sum(), i.size()[0])
         
     def close(self):
         self.visualization.close()
