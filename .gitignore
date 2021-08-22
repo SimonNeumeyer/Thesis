@@ -1,7 +1,6 @@
-Tex/Expose/*
-Tex/Orga/*
-Code/.metadata/
-Theses_v1/
-Code/Theses_v1/data/*
+Tex/Expose/
+Tex/Orga/
+Code/Theses_v1/data/
+Code/Theses_v1/source/__pycache__
 !Tex/Expose/*.pdf
 !Tex/Expose/*.tex

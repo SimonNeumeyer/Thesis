@@ -1,0 +1,12 @@
+{
+	"model": {
+		"features": 0,
+		"classes": 0
+	},
+	"optimization": {
+		"epochs": 1,
+		"alphaUpdate": "True",
+		"alphaSampling": "True",
+		"sharedWeights": "False"
+	}
+}

@@ -21,7 +21,6 @@ class MyDataset(Dataset):
         self.number_classes = 2
         self.size = size
         self.number_features = number_features
-        self.batch_size = 4
         self.num_workers = 4
         if overwrite:
             try:
@@ -75,25 +74,25 @@ class MyDataset(Dataset):
         for i, o in loader_sample:
             return (i, o)
         
-    def get_train_test_loader(self):
+    def get_train_test_loader(self, batchSize):
         self.number_classes = 2
         self.train_test_ratio = 0.8
         loader_train = DataLoader(
                 self,
                 sampler=SubsetRandomSampler(range(0, int(self.train_test_ratio * self.size))),
-                batch_size=self.batch_size,
+                batch_size=batchSize,
                 num_workers=self.num_workers
             )
         loader_test = DataLoader(
                 self,
                 sampler=SubsetRandomSampler(range(int(self.train_test_ratio * self.size), self.size)),
-                batch_size=self.batch_size,
+                batch_size=batchSize,
                 num_workers=self.num_workers
             )
         return (loader_train, loader_test)
 
 class MyMNIST():
-    def __init__(self, batch_size=64, one_hot_target=True):
+    def __init__(self, one_hot_target=True):
         self.path = Constants.PATH_DATA / "MNIST"
         try:
             os.makedirs(self.path)
@@ -101,7 +100,6 @@ class MyMNIST():
             pass
         self.number_classes = 10
         self.number_features = 28 * 28
-        self.batch_size = batch_size
         self.one_hot_target = one_hot_target
         self.num_workers = 4
         self.dataset_train = torchvision.datasets.MNIST(
@@ -133,16 +131,16 @@ class MyMNIST():
         for i, o in loader_sample:
             return (i, o)
         
-    def get_train_test_loader(self):
+    def get_train_test_loader(self, batchSize):
         loader_train = DataLoader(
             self.dataset_train,
-            batch_size = self.batch_size,
+            batch_size = batchSize,
             num_workers = self.num_workers,
             shuffle=True
         )
         loader_test = DataLoader(
             self.dataset_test,
-            batch_size = self.batch_size,
+            batch_size = batchSize,
             num_workers = self.num_workers,
             shuffle=True
         )

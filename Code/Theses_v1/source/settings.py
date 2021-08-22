@@ -16,6 +16,7 @@ class Settings():
             "optimization": {
                 "epochs": 3,
                 "optimizer": Constants.OPTIMIZER_ADAM,
+                "batchSize": 61,
                 "alphaUpdate": True,
                 "alphaSampling": True,
                 "diffNNReduce": Constants.REDUCE_FUNC_SUM,

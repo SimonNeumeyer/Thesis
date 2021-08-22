@@ -17,7 +17,7 @@ class Trainer():
         self.settings = Settings(**kwargs)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Cuda: {torch.cuda.is_available()}")
-        features, classes = self.initiate_data()
+        features, classes = self.initiate_data(self.settings["optimization"]["batchSize"])
         self.settings.update(**{"model": {"classes": classes, "features": features}})
         self.visualization = Visualization(self.settings["org"]["visualization"], json.dumps(self.settings.settings))
         self.model = Model0(self.settings["model"])
@@ -26,10 +26,10 @@ class Trainer():
         self.loss_function, self.optimizer = self.backward_stuff(self.model, self.settings["optimization"]["optimizer"])
         self.visualization.close()
         
-    def initiate_data(self):
+    def initiate_data(self, batchSize):
         #self.dataset = MyDataset(overwrite=False)
         self.dataset = MyMNIST()
-        self.loader_train, self.loader_test = self.dataset.get_train_test_loader()
+        self.loader_train, self.loader_test = self.dataset.get_train_test_loader(batchSize)
         return (self.dataset.number_features, self.dataset.number_classes)
         
         

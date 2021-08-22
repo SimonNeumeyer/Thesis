@@ -1,4 +1,5 @@
 from diffNN import *
+import graph
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -23,12 +24,12 @@ class Model1(nn.Sequential):
     def __init__(self, settings):
         super(Model1, self).__init__()
         self.settings = settings
-        graphs = graph.GraphGenerator(number_nodes).get_random_subset(number_graphs)
-        if self.optimizationSettings.shared_weights:
-            graphNNs = GraphNN.generate_graphNNs_shared_weights(graphs, self.number_features_graphNN)
-        else:
-            graphNNs = [GraphNN(graph, self.number_features_graphNN) for graph in graphs]
-        diffNN = DiffNN(graphNNs, self.optimization_settings)
+        graphs = graph.GraphGenerator(3).get_random_subset(2)
+        #if self.optimizationSettings.shared_weights:
+        #    graphNNs = GraphNN.generate_graphNNs_shared_weights(graphs, self.number_features_graphNN)
+        #else:
+        graphNNs = [GraphNN(graph, width=17) for graph in graphs]
+        diffNN = DiffNN(graphNNs, self.settings)
         self.add_module("FirstLinear", nn.Linear(self.number_features_in, self.number_features_graphNN))
         self.add_module("DiffNN", diffNN)
         self.add_module("LastLinear", nn.Linear(self.number_features_graphNN, self.number_classes))
