@@ -12,3 +12,4 @@ dependencies:
   - cudatoolkit=11.1
   - torchvision
   - torchaudio
+  - tensorboard

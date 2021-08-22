@@ -93,7 +93,7 @@ class MyDataset(Dataset):
         return (loader_train, loader_test)
 
 class MyMNIST():
-    def __init__(self):
+    def __init__(self, batch_size=64, one_hot_target=True):
         self.path = Constants.PATH_DATA / "MNIST"
         try:
             os.makedirs(self.path)
@@ -101,7 +101,8 @@ class MyMNIST():
             pass
         self.number_classes = 10
         self.number_features = 28 * 28
-        self.batch_size = 64
+        self.batch_size = batch_size
+        self.one_hot_target = one_hot_target
         self.num_workers = 4
         self.dataset_train = torchvision.datasets.MNIST(
             self.path,
@@ -109,9 +110,8 @@ class MyMNIST():
             download=True,
             transform=torchvision.transforms.Compose([
                 torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-                MyTransformFromImage()]),
-            target_transform=MyTargetTransform()
+                torchvision.transforms.Normalize((0.1307,), (0.3081,))]),
+            target_transform=MyTargetTransform(self.one_hot_target)
         )
         self.dataset_test = torchvision.datasets.MNIST(
             self.path,
@@ -119,9 +119,8 @@ class MyMNIST():
             download=True,
             transform=torchvision.transforms.Compose([
                 torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-                MyTransformFromImage()]),
-            target_transform=MyTargetTransform()
+                torchvision.transforms.Normalize((0.1307,), (0.3081,))]),
+            target_transform=MyTargetTransform(self.one_hot_target)
         )
 
     def get_sample(self):
@@ -149,12 +148,15 @@ class MyMNIST():
         )
         return (loader_train, loader_test)
     
-class MyTransformFromImage():
-    def __call__(self, x):
-        return torch.squeeze(x.view(1,-1,1))
-    
 class MyTargetTransform():
+
+    def __init__ (self, one_hot_target):
+        self.one_hot_target = one_hot_target
+
     def __call__(self, x):
         t = torch.zeros(10)
         t[x] = 1
-        return t
+        if self.one_hot_target:
+            return t
+        else:
+            return x

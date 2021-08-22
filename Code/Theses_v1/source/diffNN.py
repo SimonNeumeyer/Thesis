@@ -2,9 +2,7 @@ import torch
 import torch.nn as nn
 from util import Constants
 from graph import GraphGenerator
-#from myLogging import alpha_gradient_logging
 from collections import OrderedDict
-from main import OptimizationSettings #MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 
 class DiffNN(nn.ModuleList):
     
