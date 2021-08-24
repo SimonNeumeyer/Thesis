@@ -79,7 +79,8 @@ class Trainer():
             alphaUpdate = True
         else:
             alphaUpdate = False
-        self.settings.update({"model": {"darts": {"active": alphaUpdate}}})
+        #self.settings.update({"model": {"darts": {"active": alphaUpdate}}}) #settings object seems to be different
+        self.model.set_alpha_update(alphaUpdate)
                 
     def loss(self, i, o):
         if isinstance(self.loss_function, nn.CrossEntropyLoss):

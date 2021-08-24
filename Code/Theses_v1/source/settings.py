@@ -42,7 +42,7 @@ class Settings():
                 ]
             },
             "optimization": {
-                "epochs": 6,
+                "epochs": 7,
                 "optimizer": Constants.OPTIMIZER_ADAM,
                 "batchSize": 61
             },

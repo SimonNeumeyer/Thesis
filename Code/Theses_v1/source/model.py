@@ -40,6 +40,10 @@ class Model1(nn.Module):
     def preprocess (self, x):
         return x.view(x.size()[0],-1)
 
+    def set_alpha_update (self, alphaUpdate):
+        for cell in self.cells:
+            cell.set_alpha_update(alphaUpdate)
+
     def forward (self, x):
         x = self.preprocess(x)
         x = F.relu(self.linear_0(x))

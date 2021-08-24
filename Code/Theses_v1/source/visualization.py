@@ -83,7 +83,6 @@ class Visualization:
                                global_step=epoch)
         #alphas
         for diffNN in self.diffNN_registry:
-            #if diffNN.alpha_gradient_active():
             self.writer.add_figure(figure=self._get_alpha_plot(alpha=diffNN.get_alphas()),
                                         tag="_".join([diffNN.get_name(), Constants.ALPHA]),
                                         global_step=epoch)
@@ -102,7 +101,7 @@ class Visualization:
         y = numpy.arange(-0.5, matrix.shape[0], 1)
         fig, ax = plt.subplots()
         #c = ax.pcolormesh(x, y, matrix, cmap='RdBu', norm=colors.Normalize())
-        c = ax.pcolormesh(x, y, matrix, cmap='RdBu')
+        c = ax.pcolormesh(x, y, matrix, cmap='RdBu', vmin=-1, vmax=1)
         fig.colorbar(c, ax=ax)
         return fig
 

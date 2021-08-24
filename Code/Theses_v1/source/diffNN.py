@@ -11,6 +11,7 @@ class DiffNN(nn.ModuleList):
         self.name = name
         self.settings = settings
         self.alphas = self.init_alphas(modules)
+        self.alpha_update = True
         self.set_alpha_update(False)
         
     def get_name(self):
@@ -18,13 +19,14 @@ class DiffNN(nn.ModuleList):
         
     def set_alpha_update(self, alpha_update):
         """ Freeze or unfreeze weights respectively alphas """
-        self.alpha_update = alpha_update
-        if alpha_update:
-            self.alphas.requires_grad = True
-            self.set_weight_update(False)
-        else:
-            self.alphas.requires_grad = False
-            self.set_weight_update(True)
+        if self.alpha_update != alpha_update:
+            self.alpha_update = alpha_update
+            if alpha_update:
+                self.alphas.requires_grad = True
+                self.set_weight_update(False)
+            else:
+                self.alphas.requires_grad = False
+                self.set_weight_update(True)
             
     def get_alphas(self):
         return self.alphas.data.clone().detach()
@@ -62,10 +64,10 @@ class DiffNN(nn.ModuleList):
             return reduced
         
     def forward(self, x):
-        if self.settings["darts"]["active"] and not self.alpha_update:
-            self.set_alpha_update(True)
-        if not self.settings["darts"]["active"] and self.alpha_update:
-            self.set_alpha_update(False)
+        #if self.settings["darts"]["active"] and not self.alpha_update:
+        #    self.set_alpha_update(True)
+        #if not self.settings["darts"]["active"] and self.alpha_update:
+        #    self.set_alpha_update(False)
         alphas = self.calculate_alphas(self.settings["darts"]["sampling"])
         return self.reduce(alphas, [module(x) for module in self], reduce=self.settings["darts"]["reduce"], normalize=self.settings["darts"]["normalize"])
         
