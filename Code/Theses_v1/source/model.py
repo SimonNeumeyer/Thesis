@@ -21,7 +21,7 @@ class Model0(nn.Module):
 
 class Model1(nn.Module):
 
-    def __init__(self, settings):
+    def __init__(self, settings, diffNN_callback):
         super(Model1, self).__init__()
         self.settings = settings
         self.linear_0 = nn.Linear(self.settings["features"], self.settings["graphs"]["features"])
@@ -35,6 +35,7 @@ class Model1(nn.Module):
             graphNNs = [GraphNN(graph, self.settings["graphs"]) for graph in graphs]
             diffNN = DiffNN(f"Cell_{i}", graphNNs, self.settings)
             self.cells.append(diffNN)
+            diffNN_callback(diffNN)
 
     def preprocess (self, x):
         return x.view(x.size()[0],-1)
