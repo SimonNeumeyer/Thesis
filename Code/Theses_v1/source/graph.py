@@ -99,8 +99,11 @@ class GraphGenerator():
     def number_graphs(self):
         return len(self.graphs)
     
-    def get_random_subset(self, number_samples):
-        indices = self.rand.choice(self.number_graphs(), number_samples, replace=False)
+    def get_random_subset(self, number_samples, random=False):
+        if random:
+            indices = self.rand.choice(self.number_graphs(), number_samples, replace=False)
+        else:
+            indices = range(number_samples)
         return [self.get(index) for index in indices]
     
     def get(self, index):

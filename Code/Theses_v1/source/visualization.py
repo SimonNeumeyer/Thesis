@@ -60,6 +60,11 @@ class Visualization:
         self.running_loss = ((counter - 1) * self.running_loss + loss) / counter
 
     @visualize_flag
+    def save_alphas (self):
+        for diffNN in self.diffNN_registry:
+            self.writer.add_text("_".join([diffNN.get_name(), Constants.ALPHA]), str(diffNN.get_alphas()))
+
+    @visualize_flag
     def evaluation_loss(self, epoch, evaluation_loss, accuracy):
         """ 
         Args:
@@ -88,6 +93,7 @@ class Visualization:
                                         global_step=epoch)
             
     def close(self):
+        self.save_alphas()
         self.writer.flush()
         self.writer.close()
         

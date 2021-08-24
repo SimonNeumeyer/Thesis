@@ -28,21 +28,21 @@ class Settings():
                 },
                 "cells": [
                     {
-                        "numberNodes": 3,
-                        "numberGraphs": 2
+                        "numberNodes": 5,
+                        "numberGraphs": 5
                     },
                     {
-                        "numberNodes": 3,
-                        "numberGraphs": 2
+                        "numberNodes": 5,
+                        "numberGraphs": 5
                     },
                     {
-                        "numberNodes": 3,
+                        "numberNodes": 4,
                         "numberGraphs": 2
                     }
                 ]
             },
             "optimization": {
-                "epochs": 7,
+                "epochs": 23,
                 "optimizer": Constants.OPTIMIZER_ADAM,
                 "batchSize": 61
             },
