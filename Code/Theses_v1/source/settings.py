@@ -11,17 +11,40 @@ class Settings():
         self.settings = {
             "model": {
                 "features": 0,
-                "classes": 0
+                "classes": 0,
+                "darts": {
+                    "apply": True,
+                    "active": True,
+                    "sampling": False,
+                    "reduce": Constants.REDUCE_FUNC_SUM,
+                    "normalize": False, #not implemented
+                    "sharedWeights": False,
+                    "randomInit": True
+                },
+                "graphs": {
+                    "features": 17,
+                    "reduce": Constants.REDUCE_FUNC_SUM,
+                    "normalize": False, #not implemented
+                },
+                "cells": [
+                    {
+                        "numberNodes": 3,
+                        "numberGraphs": 2
+                    },
+                    {
+                        "numberNodes": 3,
+                        "numberGraphs": 2
+                    },
+                    {
+                        "numberNodes": 3,
+                        "numberGraphs": 2
+                    }
+                ]
             },
             "optimization": {
-                "epochs": 3,
+                "epochs": 6,
                 "optimizer": Constants.OPTIMIZER_ADAM,
-                "batchSize": 61,
-                "alphaUpdate": True,
-                "alphaSampling": True,
-                "diffNNReduce": Constants.REDUCE_FUNC_SUM,
-                "graphNNReduce": Constants.REDUCE_FUNC_SUM,
-                "sharedWeights": False
+                "batchSize": 61
             },
             "org": {
                 "visualization": {

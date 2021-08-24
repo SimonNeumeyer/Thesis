@@ -19,8 +19,9 @@ class Trainer():
         print(f"Cuda: {torch.cuda.is_available()}")
         features, classes = self.initiate_data(self.settings["optimization"]["batchSize"])
         self.settings.update(**{"model": {"classes": classes, "features": features}})
-        self.visualization = Visualization(self.settings["org"]["visualization"], json.dumps(self.settings.settings))
-        self.model = Model0(self.settings["model"])
+        self.visualization = Visualization(self.settings["org"]["visualization"], json.dumps(self.settings.settings, indent=2))
+        self.model = Model1(self.settings["model"])
+        #self.visualization.register_diffNN(diffNN)
         self.model.to(self.device)
         self.visualization.plot_model(self.model, self.dataset.get_sample()[0].to(self.device))
         self.loss_function, self.optimizer = self.backward_stuff(self.model, self.settings["optimization"]["optimizer"])
@@ -79,7 +80,7 @@ class Trainer():
             alphaUpdate = True
         else:
             alphaUpdate = False
-        self.settings.update({"optimization": {"alphaUpdate": alphaUpdate}})
+        self.settings.update({"model": {"darts": {"active": alphaUpdate}}})
                 
     def loss(self, i, o):
         if isinstance(self.loss_function, nn.CrossEntropyLoss):

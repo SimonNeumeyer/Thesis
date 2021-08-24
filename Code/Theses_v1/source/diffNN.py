@@ -6,18 +6,15 @@ from collections import OrderedDict
 
 class DiffNN(nn.ModuleList):
     
-    def __init__(self, modules, optimization_settings):
+    def __init__(self, name, modules, settings):
         super(DiffNN, self).__init__(modules)
+        self.name = name
+        self.settings = settings
         self.alphas = self.init_alphas(modules)
         self.set_alpha_update(False)
-        self.name = "OnlyDiffNN" #TODO
-        self.optimization_settings = optimization_settings
         
     def get_name(self):
         return self.name
-    
-    def set_optimization_settings(self, optimization_settings):
-        self.optimization_settings = optimization_settings
         
     def set_alpha_update(self, alpha_update):
         """ Freeze or unfreeze weights respectively alphas """
@@ -43,23 +40,19 @@ class DiffNN(nn.ModuleList):
                 parameter.requires_grad = False
         
     def calculate_alphas(self, alpha_sampling):
-        """ alphas are either sampled or smooth """
-        alphas = nn.functional.softmax(self.alphas, dim=0)
         if alpha_sampling:
-            alphas = nn.functional.gumbel_softmax(self.alphas, hard=True, tau=1)
-        return alphas
+            return nn.functional.gumbel_softmax(self.alphas, hard=True, tau=1)
+        else:
+            return nn.functional.softmax(self.alphas, dim=0)
         
     def init_alphas(self, modules):
-        alphas = nn.Parameter(torch.ones(len(modules)), requires_grad=True)
-        #alphas.register_hook(alpha_gradient_logging)
-        return alphas
-    
-    def alpha_gradient_active(self):
-        return self.alpha_update
+        if self.settings["darts"]["randomInit"]:
+            return nn.Parameter(torch.rand(len(modules)), requires_grad=True)
+        else:
+            return nn.Parameter(torch.ones(len(modules)), requires_grad=True)
         
     def reduce(self, alphas, tensors, reduce, normalize):
         if reduce == Constants.REDUCE_FUNC_SUM:
-            #reduced = nn.functional.linear(alphas, torch.stack(tensors, dim=2))
             reduced = torch.matmul(alphas, torch.stack(tensors, dim=1))
         else:
             raise NotImplementedError("no other reduction function than sum")
@@ -69,20 +62,21 @@ class DiffNN(nn.ModuleList):
             return reduced
         
     def forward(self, x):
-        if self.optimization_settings.alpha_update and not self.alpha_update:
+        if self.settings["darts"]["active"] and not self.alpha_update:
             self.set_alpha_update(True)
-        if not self.optimization_settings.alpha_update and self.alpha_update:
+        if not self.settings["darts"]["active"] and self.alpha_update:
             self.set_alpha_update(False)
-        alphas = self.calculate_alphas(self.optimization_settings.alpha_sampling)
-        return self.reduce(alphas, [module(x, self.optimization_settings) for module in self], reduce=self.optimization_settings.diffNN_reduce, normalize=self.optimization_settings.diffNN_normalize)
+        alphas = self.calculate_alphas(self.settings["darts"]["sampling"])
+        return self.reduce(alphas, [module(x) for module in self], reduce=self.settings["darts"]["reduce"], normalize=self.settings["darts"]["normalize"])
         
         
 class GraphNN(nn.Module):
     
-    def __init__(self, graph, width=None, shared_edgeNNs=None):
+    def __init__(self, graph, settings, shared_edgeNNs=None):
         super(GraphNN, self).__init__()
+        self.settings = settings
         self.graph = graph
-        self.width = width
+        self.width = settings["features"]
         self.edgeNNs = shared_edgeNNs
         self.initModel()
         
@@ -125,9 +119,9 @@ class GraphNN(nn.Module):
         else:
             return reduced
         
-    def forward(self, x, optimization_settings):
+    def forward(self, x):
         outputs = {self.graph.input_node : x}
         for v in self.graph.ordered_nodes(except_input_node = True):
             inputs = [self.edgeNNs[self.stringify_edge((p, v))](outputs[p]) for p in self.graph.get_predecessors(v)]
-            outputs[v] = self.reduce(inputs, reduce=optimization_settings.graphNN_reduce, normalize=optimization_settings.graphNN_normalize)
+            outputs[v] = self.reduce(inputs, reduce=self.settings["reduce"], normalize=self.settings["normalize"])
         return outputs[self.graph.output_node]

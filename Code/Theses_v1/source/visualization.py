@@ -83,8 +83,8 @@ class Visualization:
                                global_step=epoch)
         #alphas
         for diffNN in self.diffNN_registry:
-            if diffNN.alpha_gradient_active():
-                self.writer.add_figure(figure=self._get_alpha_plot(alpha=diffNN.get_alphas()),
+            #if diffNN.alpha_gradient_active():
+            self.writer.add_figure(figure=self._get_alpha_plot(alpha=diffNN.get_alphas()),
                                         tag="_".join([diffNN.get_name(), Constants.ALPHA]),
                                         global_step=epoch)
             
