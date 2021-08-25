@@ -21,10 +21,10 @@ class Trainer():
         self.settings.update(**{"model": {"classes": classes, "features": features}})
         self.visualization = Visualization(self.settings["org"]["visualization"], json.dumps(self.settings.settings, indent=2))
         self.model = Model1(self.settings["model"], diffNN_callback=self.visualization.register_diffNN)
+        self.visualization.plot_graphs(self.model.get_graphs())
         self.model.to(self.device)
         self.visualization.plot_model(self.model, self.dataset.get_sample()[0].to(self.device))
         self.loss_function, self.optimizer = self.backward_stuff(self.model, self.settings["optimization"]["optimizer"])
-        self.visualization.close()
         
     def initiate_data(self, batchSize):
         #self.dataset = MyDataset(overwrite=False)
@@ -40,10 +40,11 @@ class Trainer():
             return (nn.CrossEntropyLoss(), SGD(model.parameters(), lr=1e-2, momentum=0.8))
     
     def run(self):
-        for i in range(self.settings["optimization"]["epochs"]):
-            print(f"epoch {i+1}")
+        for i in range(1, self.settings["optimization"]["epochs"] + 1):
+            print(f"epoch {i}")
             self.train_epoch(i)
             self.evaluate(i)
+        self.visualization.close()
     
     def train_epoch(self, epoch):
         self.model.train()

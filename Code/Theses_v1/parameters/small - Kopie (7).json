@@ -1,0 +1,14 @@
+{
+            "model": {
+                "cells": [
+                    {
+                        "numberNodes": 3,
+                        "numberGraphs": 2
+                    },
+                    {
+                        "numberNodes": 3,
+                        "numberGraphs": 2
+                    }
+                ]
+            }
+        }

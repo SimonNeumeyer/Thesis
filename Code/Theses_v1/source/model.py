@@ -28,14 +28,17 @@ class Model1(nn.Module):
         self.linear_1 = nn.Linear(self.settings["graphs"]["features"], self.settings["classes"])
         self.cells = nn.ModuleList()
         for i, cell in enumerate(self.settings["cells"]):
-            graphs = graph.GraphGenerator(cell["numberNodes"]).get_random_subset(cell["numberGraphs"])
+            self.graphs = graph.GraphGenerator(cell["numberNodes"]).get_random_subset(cell["numberGraphs"])
             #if self.settings["darts"]["sharedWeights"]:
             #    graphNNs = GraphNN.generate_graphNNs_shared_weights(graphs, self.number_features_graphNN)
             #else:
-            graphNNs = [GraphNN(graph, self.settings["graphs"]) for graph in graphs]
+            graphNNs = [GraphNN(graph, self.settings["graphs"]) for graph in self.graphs]
             diffNN = DiffNN(f"Cell_{i}", graphNNs, self.settings)
             self.cells.append(diffNN)
             diffNN_callback(diffNN)
+
+    def get_graphs (self):
+        return [g.get_networkx() for g in self.graphs]
 
     def preprocess (self, x):
         return x.view(x.size()[0],-1)
