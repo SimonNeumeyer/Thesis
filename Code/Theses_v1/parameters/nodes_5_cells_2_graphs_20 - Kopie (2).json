@@ -2,12 +2,12 @@
             "model": {
                 "cells": [
                     {
-                        "numberNodes": 3,
-                        "numberGraphs": 2
+                        "numberNodes": 5,
+                        "numberGraphs": 20
                     },
                     {
-                        "numberNodes": 3,
-                        "numberGraphs": 2
+                        "numberNodes": 5,
+                        "numberGraphs": 20
                     }
                 ]
             }

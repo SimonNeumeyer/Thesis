@@ -22,27 +22,27 @@ class Settings():
                     "randomInit": True
                 },
                 "graphs": {
-                    "features": 17,
                     "reduce": Constants.REDUCE_FUNC_SUM,
-                    "normalize": False, #not implemented
+                    "normalize": False, #not implemented,
+                    "operation": Constants.OPERATION_LINEAR,
+                    "activation": Constants.ACTIVATION_RELU,
+                    "pooling": Constants.POOLING_MAX,
+                    "convolution": {
+                        "numberChannels": 32, #gets doubled between stages
+                    },
+                    "mlp": {
+                        "layerWidth": 17
+                    }
                 },
                 "cells": [
                     {
                         "numberNodes": 5,
                         "numberGraphs": 5
-                    },
-                    {
-                        "numberNodes": 5,
-                        "numberGraphs": 5
-                    },
-                    {
-                        "numberNodes": 4,
-                        "numberGraphs": 2
                     }
                 ]
             },
             "optimization": {
-                "epochs": 17,
+                "epochs": 30,
                 "optimizer": Constants.OPTIMIZER_ADAM,
                 "batchSize": 61
             },

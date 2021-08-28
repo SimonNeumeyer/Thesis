@@ -76,9 +76,12 @@ class GraphNN(nn.Module):
     
     def __init__(self, graph, settings, shared_edgeNNs=None):
         super(GraphNN, self).__init__()
-        self.settings = settings
         self.graph = graph
-        self.width = settings["features"]
+        self.settings = settings
+        self.width = settings["mlp"]["layerWidth"]
+        self.operation = settings["operation"]
+        self.activation = settings["activation"]
+        self.normalize = settings["normalize"]
         self.edgeNNs = shared_edgeNNs
         self.initModel()
         
@@ -99,7 +102,17 @@ class GraphNN(nn.Module):
         self.edgeNNs = nn.ModuleDict()
         for edge in graph.edges():
             if not graph.input_output_edge(*edge):
-                self.edgeNNs[self.stringify_edge(edge)] = nn.Sequential(nn.Linear(width, width), nn.ReLU())
+                self.edgeNNs[self.stringify_edge(edge)] = self.get_operation()
+
+    def get_operation (self):
+        assert self.operation in [Constants.OPERATION_CONV, Constants.OPERATION_LINEAR], f"Operation {self.operation} not supported"
+        if self.operation == Constants.OPERATION_CONV:
+            model = nn.Conv2d(1, 1, kernel_size=5, stride=1, padding=2)
+        else:
+            model = nn.Linear(self.width, self.width)
+        assert self.activation in [Constants.ACTIVATION_RELU], f"Activation {self.activation} not supported"
+        activation = nn.ReLU()
+        return nn.Sequential(model, activation)
 
     def stringify_edge(self, edge):
         return f"edge_{edge[0]}_to_{edge[1]}"
@@ -125,5 +138,5 @@ class GraphNN(nn.Module):
         outputs = {self.graph.input_node : x}
         for v in self.graph.ordered_nodes(except_input_node = True):
             inputs = [self.edgeNNs[self.stringify_edge((p, v))](outputs[p]) for p in self.graph.get_predecessors(v)]
-            outputs[v] = self.reduce(inputs, reduce=self.settings["reduce"], normalize=self.settings["normalize"])
+            outputs[v] = self.reduce(inputs, reduce=self.settings["reduce"], normalize=self.normalize)
         return outputs[self.graph.output_node]

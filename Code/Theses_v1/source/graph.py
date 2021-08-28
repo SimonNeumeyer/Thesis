@@ -34,7 +34,7 @@ class Graph():
         return self.lib_graph.predecessors(v_to)
     
     def input_output_edge(self, v_from, v_to):
-        return v_from == self.input_node or v_to == self.output_node
+        return v_from == self.input_node #or v_to == self.output_node
     
     def get_networkx(self):
         return self.lib_graph

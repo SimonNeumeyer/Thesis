@@ -114,3 +114,21 @@ class Visualization:
     #@visualize_flag
     #def plot_weight_matrix(self, matrix, tag="default_tag"):
     #    self.writer.add_figure(figure=self._get_matrix_plot(matrix), tag=tag, global_step=TODO
+
+    def alpha_density(self, alphas):
+        for i, graph in enumerate(alphas.T):
+            fig, ax = plt.subplots()
+            n, bins, patches = ax.hist(graph, 20, density=True)
+            plt.xlim(-3,3)
+            self.writer.add_figure(figure=fig,
+                                   tag=f"Density for graph {i + 1}",
+                                   global_step=i + 1)
+            #n, bins, patches = ax.hist(graph, 50, density=True, facecolor='g', alpha=0.75)
+            #plt.xlabel('Smarts')
+            #plt.ylabel('Probability')
+            #plt.title('Histogram of IQ')
+            #plt.text(60, .025, r'$\mu=100,\ \sigma=15$')
+            #plt.xlim(40, 160)
+            #plt.ylim(0, 0.03)
+            #plt.grid(True)
+            #plt.show()

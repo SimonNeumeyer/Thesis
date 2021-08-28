@@ -3,15 +3,11 @@
                 "cells": [
                     {
                         "numberNodes": 5,
-                        "numberGraphs": 5
+                        "numberGraphs": 20
                     },
                     {
                         "numberNodes": 5,
-                        "numberGraphs": 5
-                    },
-                    {
-                        "numberNodes": 5,
-                        "numberGraphs": 5
+                        "numberGraphs": 20
                     }
                 ]
             }

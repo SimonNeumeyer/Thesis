@@ -1,0 +1,26 @@
+{
+            "model": {
+                "cells": [
+                    {
+                        "numberNodes": 4,
+                        "numberGraphs": 5
+                    },
+                    {
+                        "numberNodes": 4,
+                        "numberGraphs": 5
+                    },
+                    {
+                        "numberNodes": 4,
+                        "numberGraphs": 5
+                    },
+                    {
+                        "numberNodes": 4,
+                        "numberGraphs": 5
+                    },
+                    {
+                        "numberNodes": 4,
+                        "numberGraphs": 5
+                    }
+                ]
+            }
+        }

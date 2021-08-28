@@ -20,7 +20,7 @@ class Trainer():
         features, classes = self.initiate_data(self.settings["optimization"]["batchSize"])
         self.settings.update(**{"model": {"classes": classes, "features": features}})
         self.visualization = Visualization(self.settings["org"]["visualization"], json.dumps(self.settings.settings, indent=2))
-        self.model = Model1(self.settings["model"], diffNN_callback=self.visualization.register_diffNN)
+        self.model = MLP(self.settings["model"], diffNN_callback=self.visualization.register_diffNN)
         self.visualization.plot_graphs(self.model.get_graphs())
         self.model.to(self.device)
         self.visualization.plot_model(self.model, self.dataset.get_sample()[0].to(self.device))
@@ -93,22 +93,15 @@ class Trainer():
         
     def close(self):
         self.visualization.close()
-        
 
-def parse_args(list):
-    args = {}
-    for item in list:
-        assert len(item.split("=")) == 2, f"args syntax unfamiliar: {item}"
-        try:
-            args[item.split("=")[0]] = int(item.split("=")[1])
-        except:
-            try:
-                args[item.split("=")[0]] = bool(item.split("=")[1])
-            except:
-                args[item.split("=")[0]] = item.split("=")[1]
-    return args
         
 if __name__ == "__main__":
     #args = parse_args(sys.argv[1:])
     trainer = Trainer(**{})
     trainer.run()
+
+#if __name__ == "__main__":
+#    assert any([math.isclose(math.log(4097, i), 4) for i in range(2,9)])
+    #v = Visualization(Settings(**{})["org"]["visualization"], "alpha_density")
+    #alphas = torch.tensor()
+    #v.alpha_density(alphas.numpy())

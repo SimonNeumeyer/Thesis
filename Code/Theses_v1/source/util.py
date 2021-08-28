@@ -7,6 +7,11 @@ class Constants():
     REDUCE_FUNC_SUM = "REDUCE_FUNC_SUM"
     OPTIMIZER_ADAM = "ADAM"
     PATH_DATA = Path("../data")
+    ACTIVATION_RELU = "ACTIVATION_RELU"
+    OPERATION_LINEAR = "OPERATION_LINEAR"
+    OPERATION_CONV = "OPERATION_CONV"
+    POOLING_MAX = "POOLING_MAX"
+    POOLING_AVG = "POOLING_AVG"
 
 def uuid(time=True):
     if time:
